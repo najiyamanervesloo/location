@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nalanda Schools Locator</title>
-
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- PapaParse (Google Sheets (CSV) ko read karne ke liye) -->
+    <!-- PapaParse (Google Sheets se data fetch karne ke liye) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <style>
@@ -29,116 +28,144 @@
         }
 
         /* Hide Scrollbar */
-        .hide-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        .hide-scrollbar::-webkit-scrollbar { width: 6px; }
+        .hide-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .hide-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.3); border-radius: 10px; }
+        .hide-scrollbar:hover::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.5); }
+        
+        /* Shimmer Loading Animation */
+        .shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #f6f7f8 4%, #edeef1 25%, #f6f7f8 36%);
+            background-size: 1000px 100%;
         }
-
-        .hide-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .hide-scrollbar::-webkit-scrollbar-thumb {
-            background-color: rgba(148, 163, 184, 0.3);
-            border-radius: 10px;
-        }
-
-        .hide-scrollbar:hover::-webkit-scrollbar-thumb {
-            background-color: rgba(148, 163, 184, 0.5);
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
         }
     </style>
 </head>
-
 <body class="h-screen w-full flex flex-col bg-[#f0f2f5] overflow-hidden">
 
-    <!-- --- TOP HEADER --- -->
-    <header
-        class="h-16 bg-white flex items-center justify-between px-3 sm:px-6 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] z-[1000] shrink-0">
-        <div class="flex items-center gap-2.5 sm:gap-3.5">
-            <!-- High Quality SVG Logo -->
-            <div
-                class="bg-[#f0f4fc] w-10 h-10 sm:w-[42px] sm:h-[42px] rounded-xl flex items-center justify-center shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b61e2" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" class="sm:w-6 sm:h-6">
-                    <path d="M12 3L3 21h18L12 3z" />
-                </svg>
+    <!-- --- PREMIUM FLOATING HEADER --- -->
+    <div class="px-2 sm:px-4 pt-2 sm:pt-4 shrink-0 z-[1000] relative">
+        <header class="bg-white/80 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl flex items-center justify-between px-3 sm:px-5 py-3 transition-all duration-300">
+            <!-- Logo Section -->
+            <div class="flex items-center gap-3">
+                <div class="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg shadow-blue-500/40">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="sm:w-6 sm:h-6">
+                        <path d="M12 3L3 21h18L12 3z"/>
+                    </svg>
+                    <!-- Live Tracker Dot -->
+                    <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                    </span>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <h1 class="font-black text-[20px] sm:text-[24px] text-slate-800 leading-none tracking-tight m-0 p-0">NALANDA</h1>
+                    <div class="flex items-center gap-1.5 mt-[3px]">
+                        <span class="text-[9px] sm:text-[10px] text-blue-600 font-extrabold tracking-[0.25em] leading-none uppercase">Schools</span>
+                        <span class="px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-600 text-[8px] font-bold uppercase tracking-wider">Live Locator</span>
+                    </div>
+                </div>
             </div>
-            <div class="flex flex-col justify-center">
-                <h1
-                    class="font-extrabold text-[19px] sm:text-[22px] text-[#2d3748] leading-none tracking-tight m-0 p-0">
-                    NALANDA</h1>
-                <span
-                    class="text-[9.5px] sm:text-[10.5px] text-[#2b61e2] font-bold tracking-[0.2em] mt-[4px] leading-none uppercase">Schools</span>
-            </div>
-        </div>
 
-        <nav class="hidden md:flex items-center gap-6 font-medium text-sm text-slate-600">
-            <button class="text-[#2b61e2] border-b-2 border-[#2b61e2] py-5">Locations</button>
-        </nav>
-
-        <div class="flex items-center gap-2 sm:gap-3">
-            <div class="hidden md:flex items-center bg-slate-100 rounded-full px-3 py-1.5 w-64">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
-                <input type="text" id="globalSearch" placeholder="Search locations..."
-                    class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700" />
+            <!-- Global Search (Center) -->
+            <div class="hidden md:flex flex-1 max-w-md mx-6">
+                <div class="flex items-center bg-slate-100/80 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-4 py-2.5 w-full transition-colors focus-within:bg-white focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/10">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-3"></i>
+                    <input 
+                        type="text" 
+                        id="globalSearch"
+                        placeholder="Yahan branch search karein..." 
+                        class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 font-medium"
+                    />
+                </div>
             </div>
-            <button
-                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
-                <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-            </button>
-            <button class="md:hidden p-1.5 text-slate-600">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
-        </div>
-    </header>
+
+            <!-- Actions & Profile -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-md transition-all border border-slate-200/60 hover:text-blue-600">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </button>
+                <div class="hidden sm:block h-8 w-px bg-slate-200 mx-1"></div>
+                <button class="hidden sm:flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 border-slate-200/50 hover:border-blue-500 overflow-hidden transition-all">
+                    <!-- Default UI Avatar API -->
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=eff6ff&color=2563eb&bold=true" alt="User Profile" class="w-full h-full object-cover" />
+                </button>
+                <button class="md:hidden p-2 text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+    </div>
 
     <!-- --- MAIN CONTENT AREA --- -->
     <main class="flex-1 flex flex-col md:flex-row p-2 sm:p-4 gap-3 sm:gap-4 overflow-hidden relative z-0">
-
-        <!-- MAP CONTAINER (Takes 45% height on mobile, flex-1 on desktop) -->
-        <div
-            class="w-full h-[45vh] md:h-auto md:flex-1 rounded-2xl bg-[#e5e3df] border border-slate-200 overflow-hidden relative shadow-sm flex flex-col z-0 shrink-0">
+        
+        <!-- MAP CONTAINER -->
+        <div class="w-full h-[45vh] md:h-auto md:flex-1 rounded-2xl bg-[#e5e3df] border border-slate-200 overflow-hidden relative shadow-sm flex flex-col z-0 shrink-0">
             <div id="mapContainer" class="w-full h-full absolute inset-0 z-0"></div>
 
-            <!-- Map Controls (Floating on Map) -->
+            <!-- Map Controls -->
             <div class="absolute right-3 top-3 sm:right-4 sm:top-4 flex flex-col gap-2 z-[1000]">
                 <div class="bg-white rounded-lg shadow-md flex flex-col overflow-hidden border border-slate-100">
-                    <button id="zoomInBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors">
+                    <button id="zoomInBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors" title="Zoom In">
                         <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     </button>
                     <div class="h-px w-full bg-slate-200"></div>
-                    <button id="zoomOutBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors">
+                    <button id="zoomOutBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors" title="Zoom Out">
                         <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     </button>
                 </div>
-                <button id="locateBtn"
-                    class="bg-white rounded-lg shadow-md p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors mt-1 border border-slate-100">
-                    <i data-lucide="locate-fixed" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                </button>
             </div>
         </div>
 
-        <!-- SIDEBAR LIST (Takes remaining height on mobile, fixed width on desktop) -->
-        <div
-            class="w-full flex-1 md:flex-none md:w-[400px] flex flex-col bg-[#f0f2f5] md:bg-transparent shrink-0 z-[1000] min-h-0">
-
+        <!-- SIDEBAR LIST -->
+        <div class="w-full flex-1 md:flex-none md:w-[400px] flex flex-col bg-[#f0f2f5] md:bg-transparent shrink-0 z-[1000] min-h-0">
+            
             <div class="flex items-center justify-between mb-2 sm:mb-3 px-1">
-                <h2 class="text-base sm:text-lg font-bold text-slate-800">School Locations <span id="storeCount"
-                        class="font-normal text-slate-500 text-xs sm:text-sm"></span></h2>
+                <h2 class="text-base sm:text-lg font-bold text-slate-800">School Locations</h2>
             </div>
 
-            <div
-                class="bg-white rounded-lg shadow-sm border border-slate-200 flex items-center px-3 py-2 mb-3 sm:mb-4 shrink-0">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
-                <input type="text" id="sidebarSearch" placeholder="Search area or school..."
-                    class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700" />
-                <button class="p-1 text-slate-400 hover:text-slate-600">
-                    <i data-lucide="filter" class="w-4 h-4"></i>
-                </button>
+            <!-- FEATURE 1: Analytics Dashboard -->
+            <div class="grid grid-cols-2 gap-2 mb-3 px-1">
+                <div class="bg-blue-50 rounded-xl p-2.5 flex flex-col justify-center items-center border border-blue-100 shadow-sm">
+                    <span class="text-[9px] sm:text-[10px] text-blue-500 font-extrabold uppercase tracking-wider">Total Branches</span>
+                    <span class="text-xl sm:text-2xl font-black text-blue-700 leading-none mt-1" id="stat-total">-</span>
+                </div>
+                <div class="bg-amber-50 rounded-xl p-2.5 flex flex-col justify-center items-center border border-amber-100 shadow-sm">
+                    <span class="text-[9px] sm:text-[10px] text-amber-500 font-extrabold uppercase tracking-wider">Network Rating</span>
+                    <div class="flex items-center gap-1 mt-1">
+                        <span class="text-xl sm:text-2xl font-black text-amber-700 leading-none" id="stat-rating">-</span>
+                        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                    </div>
+                </div>
             </div>
 
-            <div id="storeListContainer"
-                class="flex-1 overflow-y-auto hide-scrollbar space-y-3 sm:space-y-4 pb-4 px-1 min-h-0">
-                <!-- Store cards will be injected here via JavaScript -->
+            <!-- FEATURE 2: Search & Filters -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-3 sm:mb-4 shrink-0 flex flex-col gap-2">
+                <div class="flex items-center px-2 bg-slate-50 rounded-lg py-1">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
+                    <input 
+                        type="text" 
+                        id="sidebarSearch"
+                        placeholder="Search area or school..." 
+                        class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 py-1"
+                    />
+                </div>
+                <div class="flex items-center px-2 bg-slate-50 rounded-lg py-1 border border-slate-100">
+                    <i data-lucide="filter" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
+                    <select id="categoryFilter" class="bg-transparent border-none outline-none text-xs sm:text-sm w-full text-slate-600 font-medium py-1 cursor-pointer appearance-none">
+                        <option value="all">All Categories</option>
+                        <!-- Options dynamically load hongi -->
+                    </select>
+                </div>
+            </div>
+
+            <div id="storeListContainer" class="flex-1 overflow-y-auto hide-scrollbar space-y-3 sm:space-y-4 pb-4 px-1 min-h-0">
+                <!-- Store cards JS se aayengi -->
             </div>
         </div>
     </main>
@@ -151,18 +178,10 @@
         // =========================================================================
         // AAPKI GOOGLE SHEET KA LINK
         // =========================================================================
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv";
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv"; 
 
-        const USER_LOCATION = { lat: 16.6925, lng: 74.2306 };
-
-        // Default Data Fallback
-        let STORES = [
-            {
-                id: 1, name: "Nalanda The Unique Preschool | Shaniwar Peth Kolhapur", category: "Preschool", lat: 16.6967, lng: 74.2266, rating: 5.0, reviews: 18, distance: "1.2", address: "Samrat Chowk, 2073 C Ward, Kolhapur", phone: "099213 14767", time: "Closed · Opens 10:30 am Mon", reviewQuote: '"Teachers are caring, attentive, and focused on individual growth."'
-            }
-        ];
-
-        // --- STATE ---
+        let USER_LOCATION = { lat: 16.6925, lng: 74.2306 }; 
+        let STORES = [];
         let selectedStoreId = null;
         let mapInstance = null;
         let markersLayer = null;
@@ -178,96 +197,141 @@
             }
         });
 
-        // Helper: Find value from row regardless of column header case
+        // Smart Category Colors (Preschool vs School)
+        function getCategoryTheme(category) {
+            const cat = category.toLowerCase();
+            if (cat.includes('preschool') || cat.includes('pre-school')) {
+                return { grad: 'from-amber-400 to-orange-500', border: 'border-orange-500', text: 'text-orange-700', bg: 'bg-orange-100', dot: 'bg-orange-600' };
+            }
+            // Default (School / Ed Institution)
+            return { grad: 'from-blue-400 to-blue-600', border: 'border-blue-500', text: 'text-blue-700', bg: 'bg-blue-100', dot: 'bg-blue-600' };
+        }
+
         function getColumnValue(row, possibleNames) {
             const rowKeys = Object.keys(row);
             for (let key of rowKeys) {
-                if (possibleNames.includes(key.toLowerCase().trim())) {
-                    return row[key];
+                if (possibleNames.includes(key.toLowerCase().trim())) return row[key];
+            }
+            for (let key of rowKeys) {
+                for (let name of possibleNames) {
+                    if (key.toLowerCase().trim().includes(name)) return row[key];
                 }
             }
-            return null; // Return null if column not found
+            return null; 
         }
 
-        // Google Sheet CSV Fetch Function
+        // Google Sheet CSV Fetch Function with Skeleton Loader
         function fetchDataFromGoogleSheet() {
-            document.getElementById('storeListContainer').innerHTML = `
-                <div class="p-8 text-center flex flex-col items-center justify-center h-full text-slate-500">
-                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin mb-3 text-blue-500"></i>
-                    <p class="font-medium text-sm">Google Sheets se locations load ho rahe hain...</p>
+            const container = document.getElementById('storeListContainer');
+            // FEATURE: Professional Skeleton Loading State
+            container.innerHTML = `
+                <div class="space-y-4">
+                    ${[1, 2, 3].map(() => `
+                        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                            <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
+                            <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
+                            <div class="space-y-2">
+                                <div class="shimmer h-3 w-full rounded"></div>
+                                <div class="shimmer h-3 w-5/6 rounded"></div>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
-            lucide.createIcons();
 
-            // Cache bust karne ke liye ek random timestamp add karte hain
             const cacheBuster = new Date().getTime();
-            const fetchUrl = `${GOOGLE_SHEET_CSV_URL}&t=${cacheBuster}`;
-
-            Papa.parse(fetchUrl, {
+            Papa.parse(`${GOOGLE_SHEET_CSV_URL}&t=${cacheBuster}`, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
-                complete: function (results) {
-
+                complete: function(results) {
                     const parsedStores = results.data.map((row, index) => {
-                        // Extracting data case-insensitively
-                        const latVal = getColumnValue(row, ['lat', 'latitude']);
-                        const lngVal = getColumnValue(row, ['lng', 'longitude', 'lon']);
-
+                        const latVal = getColumnValue(row, ['lat', 'latitude', 'y point']);
+                        const lngVal = getColumnValue(row, ['lng', 'longitude', 'long', 'x point']);
+                        
                         return {
-                            id: index + 1,
-                            name: getColumnValue(row, ['name', 'title', 'school name', 'branch']) || "Nalanda School",
-                            category: getColumnValue(row, ['category', 'type']) || "Preschool",
+                            id: index + 100, 
+                            name: getColumnValue(row, ['name', 'title', 'school', 'branch']) || "Nalanda School",
+                            category: getColumnValue(row, ['category', 'type']) || "Educational Institution",
                             lat: parseFloat(latVal),
                             lng: parseFloat(lngVal),
                             rating: parseFloat(getColumnValue(row, ['rating', 'score'])) || 5.0,
                             reviews: parseInt(getColumnValue(row, ['reviews', 'review count'])) || 0,
-                            distance: getColumnValue(row, ['distance', 'dist']) || "0",
-                            address: getColumnValue(row, ['address', 'location']) || "Kolhapur",
+                            distance: "0", 
+                            address: getColumnValue(row, ['address', 'location']) || "No Address Provided",
                             phone: String(getColumnValue(row, ['phone', 'mobile', 'contact', 'whatsapp']) || ""),
                             time: getColumnValue(row, ['time', 'hours', 'status']) || "Open",
                             reviewQuote: getColumnValue(row, ['reviewquote', 'quote', 'review']) || ""
                         };
-                    }).filter(s => !isNaN(s.lat) && !isNaN(s.lng)); // Only keep valid coordinates
+                    }).filter(s => !isNaN(s.lat) && !isNaN(s.lng)); 
 
-                    if (parsedStores.length > 0) {
-                        STORES = parsedStores;
+                    if(parsedStores.length > 0) {
+                        STORES = parsedStores; 
+                        updateAnalyticsAndCategories();
                     } else {
-                        console.error("No valid Lat/Lng found in the Google Sheet. Showing default.");
+                        STORES = []; 
                     }
+                    
                     initializeApp();
                 },
-                error: function (error) {
+                error: function(error) {
                     console.error("Sheet Loading Error:", error);
-                    initializeApp(); // Fallback to default
+                    STORES = []; 
+                    initializeApp(); 
                 }
             });
         }
 
+        // FEATURE: Update Admin Dashboard Stats & Category Filter
+        function updateAnalyticsAndCategories() {
+            // Update Dashboard
+            document.getElementById('stat-total').textContent = STORES.length;
+            if(STORES.length > 0) {
+                const avg = STORES.reduce((sum, s) => sum + s.rating, 0) / STORES.length;
+                document.getElementById('stat-rating').textContent = avg.toFixed(1);
+            }
+
+            // Populate Category Filter
+            const categories = [...new Set(STORES.map(s => s.category))].filter(Boolean);
+            const filterDropdown = document.getElementById('categoryFilter');
+            
+            // Keep default "All", remove old options, add new ones
+            filterDropdown.innerHTML = '<option value="all">All Categories</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.toLowerCase();
+                opt.textContent = cat;
+                filterDropdown.appendChild(opt);
+            });
+        }
+
         function initializeApp() {
-            document.getElementById('storeCount').textContent = `(${STORES.length} Branches)`;
             initMap();
             renderList();
+            
+            const globalSearchInput = document.getElementById('globalSearch');
+            const sidebarSearchInput = document.getElementById('sidebarSearch');
+            const categoryFilter = document.getElementById('categoryFilter');
 
-            document.getElementById('sidebarSearch').addEventListener('input', () => {
-                renderList();
-                renderMarkers();
+            // Sync interactions
+            globalSearchInput.addEventListener('input', (e) => {
+                sidebarSearchInput.value = e.target.value;
+                renderList(); renderMarkers(); 
+            });
+            sidebarSearchInput.addEventListener('input', (e) => {
+                globalSearchInput.value = e.target.value;
+                renderList(); renderMarkers(); 
+            });
+            categoryFilter.addEventListener('change', () => {
+                renderList(); renderMarkers();
+                selectedStoreId = null; // reset selection on filter change
             });
 
             document.getElementById('zoomInBtn').addEventListener('click', () => mapInstance.zoomIn());
             document.getElementById('zoomOutBtn').addEventListener('click', () => mapInstance.zoomOut());
-            document.getElementById('locateBtn').addEventListener('click', () => {
-                mapInstance.flyTo([USER_LOCATION.lat, USER_LOCATION.lng], 13, { duration: 1 });
-                selectedStoreId = null;
-                renderList();
-                renderMarkers();
-            });
 
-            // Handle window resize properly for map to adapt
             window.addEventListener('resize', () => {
-                if (mapInstance) {
-                    mapInstance.invalidateSize();
-                }
+                if(mapInstance) mapInstance.invalidateSize();
             });
 
             lucide.createIcons();
@@ -277,18 +341,10 @@
         function initMap() {
             if (mapInstance) { mapInstance.remove(); }
 
-            // Determine center based on data or default
-            let centerLat = USER_LOCATION.lat;
-            let centerLng = USER_LOCATION.lng;
-            if (STORES.length > 0) {
-                centerLat = STORES[0].lat;
-                centerLng = STORES[0].lng;
-            }
-
             mapInstance = L.map('mapContainer', {
                 zoomControl: false,
                 attributionControl: false
-            }).setView([centerLat, centerLng], 13);
+            });
 
             L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
                 maxZoom: 20,
@@ -296,49 +352,59 @@
 
             markersLayer = L.layerGroup().addTo(mapInstance);
 
-            // Add User Location Marker
-            const userIconHTML = `
-                <div style="transform: translate(-50%, -50%);" class="flex flex-col items-center pointer-events-none">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-full opacity-20 absolute animate-ping"></div>
-                    <div class="w-4 h-4 sm:w-5 sm:h-5 bg-blue-600 rounded-full border-[3px] sm:border-4 border-white shadow-md relative z-10"></div>
-                </div>
-            `;
-            const userIcon = L.divIcon({ className: 'bg-transparent border-none', html: userIconHTML, iconSize: [0, 0] });
-            L.marker([USER_LOCATION.lat, USER_LOCATION.lng], { icon: userIcon, interactive: false }).addTo(mapInstance);
-
             renderMarkers();
+
+            // Center map strictly on School points
+            if (STORES.length > 0) {
+                const bounds = L.latLngBounds(STORES.map(store => [store.lat, store.lng]));
+                mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+            } else {
+                mapInstance.setView([16.6925, 74.2306], 13); 
+            }
+        }
+
+        function getFilteredStores() {
+            const query = document.getElementById('sidebarSearch').value.toLowerCase();
+            const catFilter = document.getElementById('categoryFilter').value;
+
+            return STORES.filter(store => {
+                const matchesSearch = store.name.toLowerCase().includes(query) || store.address.toLowerCase().includes(query);
+                const matchesCat = catFilter === 'all' || store.category.toLowerCase() === catFilter;
+                return matchesSearch && matchesCat;
+            }).sort((a, b) => {
+                if (b.rating !== a.rating) return b.rating - a.rating; 
+                return b.reviews - a.reviews; 
+            });
         }
 
         function renderMarkers() {
             if (!markersLayer) return;
             markersLayer.clearLayers();
 
-            const query = document.getElementById('sidebarSearch').value.toLowerCase();
-            const filteredStores = STORES.filter(store =>
-                store.name.toLowerCase().includes(query) ||
-                store.address.toLowerCase().includes(query)
-            );
+            const filteredStores = getFilteredStores();
 
             filteredStores.forEach(store => {
                 const isSelected = selectedStoreId === store.id;
-
+                const theme = getCategoryTheme(store.category);
+                
+                // FEATURE: Custom colored pins based on category
                 const iconHTML = `
                     <div style="transform: translate(-50%, -100%); width: max-content;" class="flex items-center relative gap-1 transition-all duration-300 ${isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[500]'}">
                         <div class="hidden sm:block px-3 py-1.5 text-[11px] font-extrabold rounded-lg shadow-lg whitespace-nowrap ${isSelected ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}">
                             ${store.name}
                         </div>
                         <div class="relative flex flex-col items-center">
-                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 ${isSelected ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-white ring-4 ring-blue-300/50' : 'bg-gradient-to-br from-blue-400 to-blue-600 border-white'}">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 ${isSelected ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-white ring-4 ring-blue-300/50' : `bg-gradient-to-br ${theme.grad} border-white`}">
                                 N
                             </div>
-                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 ${isSelected ? 'bg-indigo-600' : 'bg-blue-600'}"></div>
+                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 ${isSelected ? 'bg-indigo-600' : theme.dot}"></div>
                         </div>
                     </div>
                 `;
 
                 const icon = L.divIcon({ className: 'bg-transparent border-none', html: iconHTML, iconSize: null });
                 const marker = L.marker([store.lat, store.lng], { icon }).addTo(markersLayer);
-
+                
                 marker.on('click', () => {
                     selectStore(store.id);
                 });
@@ -349,122 +415,128 @@
         function selectStore(id) {
             selectedStoreId = id;
             const store = STORES.find(s => s.id === id);
-
+            
             if (store && mapInstance) {
-                // Offset latitude slightly for mobile devices so the pin isn't hidden by the header
                 const isMobile = window.innerWidth < 768;
                 const offsetLat = isMobile ? store.lat + 0.005 : store.lat;
-                mapInstance.flyTo([offsetLat, store.lng], 14, { duration: 0.8 });
+                mapInstance.flyTo([offsetLat, store.lng], 15, { duration: 0.8 });
             }
-
+            
             renderList();
             renderMarkers();
-
-            // On mobile, scroll the clicked item into view if possible
-            if (window.innerWidth < 768) {
+            
+            // FEATURE: Smoother, more centered mobile scrolling
+            if(window.innerWidth < 768) {
                 setTimeout(() => {
                     const activeCard = document.getElementById(`store-card-${id}`);
-                    if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    // 'center' block brings it exactly to the middle of the view
+                    if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
             }
         }
 
         function generateStars(rating) {
             let starsHTML = '';
-            for (let i = 0; i < 5; i++) {
+            for(let i = 0; i < 5; i++) {
                 const isFilled = i < Math.floor(rating);
-                starsHTML += `<i data-lucide="star" class="w-3.5 h-3.5 ${isFilled ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}"></i>`;
+                starsHTML += `<i data-lucide="star" class="w-3.5 h-3.5 ${isFilled ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200'}"></i>`;
             }
             return starsHTML;
         }
 
         function renderList() {
             const container = document.getElementById('storeListContainer');
-            const query = document.getElementById('sidebarSearch').value.toLowerCase();
+            const filteredStores = getFilteredStores();
 
-            const filteredStores = STORES.filter(store =>
-                store.name.toLowerCase().includes(query) ||
-                store.address.toLowerCase().includes(query)
-            );
+            container.innerHTML = ''; 
 
-            container.innerHTML = '';
+            if (filteredStores.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center flex flex-col items-center justify-center h-full text-slate-400">
+                        <i data-lucide="map-x" class="w-10 h-10 mb-3 opacity-50"></i>
+                        <p class="font-medium text-sm">Koi branch nahi mili.</p>
+                        <p class="text-xs mt-1 opacity-70">Filters change karke dekhein.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
 
             filteredStores.forEach(store => {
                 const isSelected = selectedStoreId === store.id;
-
-                const cardWrapperClass = `cursor-pointer rounded-2xl p-4 sm:p-5 transition-all duration-300 border-2 relative overflow-hidden ${isSelected ? 'bg-gradient-to-br from-[#f8faff] to-[#eff6ff] border-blue-500 shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] transform scale-[1.01] sm:scale-[1.02]' : 'bg-white border-transparent shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-md hover:border-blue-100'}`;
-
+                const theme = getCategoryTheme(store.category);
+                
+                const cardWrapperClass = `cursor-pointer rounded-2xl p-4 sm:p-5 transition-all duration-300 border-2 relative overflow-hidden ${isSelected ? `bg-gradient-to-br from-[#f8faff] to-[#eff6ff] ${theme.border} shadow-md transform scale-[1.01]` : 'bg-white border-transparent shadow-sm hover:shadow-md hover:border-slate-200'}`;
+                
                 const cardHTML = `
                     <div id="store-card-${store.id}" class="${cardWrapperClass}" onclick="selectStore(${store.id})">
-                        ${isSelected ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 rounded-l-2xl"></div>' : ''}
+                        ${isSelected ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 ${theme.dot} rounded-l-2xl"></div>` : ''}
                         
-                        <h3 class="font-extrabold text-[14px] sm:text-[15px] mb-1 tracking-wide leading-tight ${isSelected ? 'text-blue-700' : 'text-slate-800'}">
-                            ${store.name}
-                        </h3>
+                        <div class="flex justify-between items-start mb-1 gap-2">
+                            <h3 class="font-extrabold text-[14px] sm:text-[15px] tracking-wide leading-tight ${isSelected ? 'text-slate-900' : 'text-slate-800'}">
+                                ${store.name}
+                            </h3>
+                            <span class="${theme.bg} ${theme.text} px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap border border-white/50 shadow-sm">${store.category}</span>
+                        </div>
                         
                         <!-- Rating Section -->
-                        <div class="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+                        <div class="flex items-center gap-1 sm:gap-1.5 mb-3">
                             <span class="text-xs sm:text-sm font-bold text-slate-700">${store.rating}</span>
                             <div class="flex">
                                 ${generateStars(store.rating)}
                             </div>
                             <span class="text-[10px] sm:text-xs text-slate-500 ml-1">(${store.reviews})</span>
-                            <span class="text-[10px] sm:text-xs text-slate-400 mx-1">•</span>
-                            <span class="text-[10px] sm:text-xs text-slate-500 font-medium">${store.category}</span>
                         </div>
                         
                         <div class="space-y-2.5 sm:space-y-3 text-xs sm:text-sm text-slate-600 font-medium">
                             <div class="flex items-start gap-2 sm:gap-3">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 mt-0.5 shrink-0"></i>
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 mt-0.5 shrink-0"></i>
                                 <span class="leading-snug">${store.address}</span>
                             </div>
                             
                             <div class="flex items-center justify-between mt-1">
                                 <div class="flex items-center gap-2 sm:gap-3">
-                                    <i data-lucide="phone" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0"></i>
+                                    <i data-lucide="phone" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0"></i>
                                     <span class="text-slate-700">${store.phone}</span>
                                 </div>
                                 
                                 <!-- WhatsApp Button -->
                                 <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center gap-1.5 sm:gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-md shadow-green-500/30 active:scale-95">
                                     ${whatsappSvg}
-                                    <span class="hidden sm:inline">WhatsApp Us</span>
-                                    <span class="sm:hidden">WhatsApp</span>
+                                    <span class="hidden sm:inline">WhatsApp</span>
+                                    <span class="sm:hidden">Chat</span>
                                 </button>
                             </div>
 
                             <div class="flex items-center justify-between mt-1">
                                 <div class="flex items-center gap-2 sm:gap-3">
-                                    <i data-lucide="navigation" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0"></i>
-                                    <span class="${isSelected ? 'text-blue-600 font-semibold' : ''}">${store.distance} miles away</span>
+                                    <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0"></i>
+                                    <span>Status: <span class="text-slate-800">${store.time}</span></span>
                                 </div>
                                 
-                                <!-- Directions Button -->
-                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}')" class="flex items-center gap-1.5 sm:gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-sm active:scale-95">
+                                <!-- FEATURE: Smart Directions (dirflg=d for Driving mode) -->
+                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&dirflg=d')" class="flex items-center gap-1.5 sm:gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-sm active:scale-95 border border-blue-100">
                                     <i data-lucide="corner-up-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                     <span class="hidden sm:inline">Directions</span>
                                     <span class="sm:hidden">Route</span>
                                 </button>
                             </div>
-
-                            <div class="flex items-center gap-2 sm:gap-3">
-                                <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0"></i>
-                                <span>Status: <span class="text-slate-800">${store.time}</span></span>
-                            </div>
                         </div>
 
                         <!-- User Review Quote -->
-                        <div class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-start gap-2.5">
-                            <div class="bg-blue-50 p-1 sm:p-1.5 rounded-full shrink-0">
-                                <i data-lucide="user" class="w-3 h-3 sm:w-4 sm:h-4 text-blue-500"></i>
+                        ${store.reviewQuote ? `
+                        <div class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 flex items-start gap-2.5 bg-slate-50/50 p-2 rounded-lg">
+                            <div class="bg-white p-1 sm:p-1.5 rounded-full shrink-0 shadow-sm border border-slate-100">
+                                <i data-lucide="message-square" class="w-3 h-3 sm:w-4 sm:h-4 text-blue-400"></i>
                             </div>
-                            <p class="text-[11px] sm:text-[13px] text-slate-500 italic leading-relaxed">
+                            <p class="text-[11px] sm:text-[12px] text-slate-500 italic leading-relaxed">
                                 ${store.reviewQuote}
                             </p>
                         </div>
+                        ` : ''}
                     </div>
                 `;
-
+                
                 container.insertAdjacentHTML('beforeend', cardHTML);
             });
 
@@ -472,5 +544,4 @@
         }
     </script>
 </body>
-
 </html>
