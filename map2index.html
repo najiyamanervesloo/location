@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nalanda Schools Locator</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- PapaParse (Google Sheets (CSV) ko read karne ke liye) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hide Scrollbar */
+        .hide-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
+        .hide-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.5);
+        }
+    </style>
+</head>
+
+<body class="h-screen w-full flex flex-col bg-[#f0f2f5] overflow-hidden">
+
+    <!-- --- TOP HEADER --- -->
+    <header
+        class="h-16 bg-white flex items-center justify-between px-3 sm:px-6 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] z-[1000] shrink-0">
+        <div class="flex items-center gap-2.5 sm:gap-3.5">
+            <!-- High Quality SVG Logo -->
+            <div
+                class="bg-[#f0f4fc] w-10 h-10 sm:w-[42px] sm:h-[42px] rounded-xl flex items-center justify-center shrink-0">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b61e2" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" class="sm:w-6 sm:h-6">
+                    <path d="M12 3L3 21h18L12 3z" />
+                </svg>
+            </div>
+            <div class="flex flex-col justify-center">
+                <h1
+                    class="font-extrabold text-[19px] sm:text-[22px] text-[#2d3748] leading-none tracking-tight m-0 p-0">
+                    NALANDA</h1>
+                <span
+                    class="text-[9.5px] sm:text-[10.5px] text-[#2b61e2] font-bold tracking-[0.2em] mt-[4px] leading-none uppercase">Schools</span>
+            </div>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-6 font-medium text-sm text-slate-600">
+            <button class="text-[#2b61e2] border-b-2 border-[#2b61e2] py-5">Locations</button>
+        </nav>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="hidden md:flex items-center bg-slate-100 rounded-full px-3 py-1.5 w-64">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
+                <input type="text" id="globalSearch" placeholder="Search locations..."
+                    class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700" />
+            </div>
+            <button
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+                <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            </button>
+            <button class="md:hidden p-1.5 text-slate-600">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- --- MAIN CONTENT AREA --- -->
+    <main class="flex-1 flex flex-col md:flex-row p-2 sm:p-4 gap-3 sm:gap-4 overflow-hidden relative z-0">
+
+        <!-- MAP CONTAINER (Takes 45% height on mobile, flex-1 on desktop) -->
+        <div
+            class="w-full h-[45vh] md:h-auto md:flex-1 rounded-2xl bg-[#e5e3df] border border-slate-200 overflow-hidden relative shadow-sm flex flex-col z-0 shrink-0">
+            <div id="mapContainer" class="w-full h-full absolute inset-0 z-0"></div>
+
+            <!-- Map Controls (Floating on Map) -->
+            <div class="absolute right-3 top-3 sm:right-4 sm:top-4 flex flex-col gap-2 z-[1000]">
+                <div class="bg-white rounded-lg shadow-md flex flex-col overflow-hidden border border-slate-100">
+                    <button id="zoomInBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    </button>
+                    <div class="h-px w-full bg-slate-200"></div>
+                    <button id="zoomOutBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors">
+                        <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    </button>
+                </div>
+                <button id="locateBtn"
+                    class="bg-white rounded-lg shadow-md p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors mt-1 border border-slate-100">
+                    <i data-lucide="locate-fixed" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SIDEBAR LIST (Takes remaining height on mobile, fixed width on desktop) -->
+        <div
+            class="w-full flex-1 md:flex-none md:w-[400px] flex flex-col bg-[#f0f2f5] md:bg-transparent shrink-0 z-[1000] min-h-0">
+
+            <div class="flex items-center justify-between mb-2 sm:mb-3 px-1">
+                <h2 class="text-base sm:text-lg font-bold text-slate-800">School Locations <span id="storeCount"
+                        class="font-normal text-slate-500 text-xs sm:text-sm"></span></h2>
+            </div>
+
+            <div
+                class="bg-white rounded-lg shadow-sm border border-slate-200 flex items-center px-3 py-2 mb-3 sm:mb-4 shrink-0">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2"></i>
+                <input type="text" id="sidebarSearch" placeholder="Search area or school..."
+                    class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700" />
+                <button class="p-1 text-slate-400 hover:text-slate-600">
+                    <i data-lucide="filter" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div id="storeListContainer"
+                class="flex-1 overflow-y-auto hide-scrollbar space-y-3 sm:space-y-4 pb-4 px-1 min-h-0">
+                <!-- Store cards will be injected here via JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- App Logic -->
+    <script>
+        // =========================================================================
+        // AAPKI GOOGLE SHEET KA LINK
+        // =========================================================================
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv";
+
+        const USER_LOCATION = { lat: 16.6925, lng: 74.2306 };
+
+        // Default Data Fallback
+        let STORES = [
+            {
+                id: 1, name: "Nalanda The Unique Preschool | Shaniwar Peth Kolhapur", category: "Preschool", lat: 16.6967, lng: 74.2266, rating: 5.0, reviews: 18, distance: "1.2", address: "Samrat Chowk, 2073 C Ward, Kolhapur", phone: "099213 14767", time: "Closed · Opens 10:30 am Mon", reviewQuote: '"Teachers are caring, attentive, and focused on individual growth."'
+            }
+        ];
+
+        // --- STATE ---
+        let selectedStoreId = null;
+        let mapInstance = null;
+        let markersLayer = null;
+
+        const whatsappSvg = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`;
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.trim() !== "") {
+                fetchDataFromGoogleSheet();
+            } else {
+                initializeApp();
+            }
+        });
+
+        // Helper: Find value from row regardless of column header case
+        function getColumnValue(row, possibleNames) {
+            const rowKeys = Object.keys(row);
+            for (let key of rowKeys) {
+                if (possibleNames.includes(key.toLowerCase().trim())) {
+                    return row[key];
+                }
+            }
+            return null; // Return null if column not found
+        }
+
+        // Google Sheet CSV Fetch Function
+        function fetchDataFromGoogleSheet() {
+            document.getElementById('storeListContainer').innerHTML = `
+                <div class="p-8 text-center flex flex-col items-center justify-center h-full text-slate-500">
+                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin mb-3 text-blue-500"></i>
+                    <p class="font-medium text-sm">Google Sheets se locations load ho rahe hain...</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            // Cache bust karne ke liye ek random timestamp add karte hain
+            const cacheBuster = new Date().getTime();
+            const fetchUrl = `${GOOGLE_SHEET_CSV_URL}&t=${cacheBuster}`;
+
+            Papa.parse(fetchUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+
+                    const parsedStores = results.data.map((row, index) => {
+                        // Extracting data case-insensitively
+                        const latVal = getColumnValue(row, ['lat', 'latitude']);
+                        const lngVal = getColumnValue(row, ['lng', 'longitude', 'lon']);
+
+                        return {
+                            id: index + 1,
+                            name: getColumnValue(row, ['name', 'title', 'school name', 'branch']) || "Nalanda School",
+                            category: getColumnValue(row, ['category', 'type']) || "Preschool",
+                            lat: parseFloat(latVal),
+                            lng: parseFloat(lngVal),
+                            rating: parseFloat(getColumnValue(row, ['rating', 'score'])) || 5.0,
+                            reviews: parseInt(getColumnValue(row, ['reviews', 'review count'])) || 0,
+                            distance: getColumnValue(row, ['distance', 'dist']) || "0",
+                            address: getColumnValue(row, ['address', 'location']) || "Kolhapur",
+                            phone: String(getColumnValue(row, ['phone', 'mobile', 'contact', 'whatsapp']) || ""),
+                            time: getColumnValue(row, ['time', 'hours', 'status']) || "Open",
+                            reviewQuote: getColumnValue(row, ['reviewquote', 'quote', 'review']) || ""
+                        };
+                    }).filter(s => !isNaN(s.lat) && !isNaN(s.lng)); // Only keep valid coordinates
+
+                    if (parsedStores.length > 0) {
+                        STORES = parsedStores;
+                    } else {
+                        console.error("No valid Lat/Lng found in the Google Sheet. Showing default.");
+                    }
+                    initializeApp();
+                },
+                error: function (error) {
+                    console.error("Sheet Loading Error:", error);
+                    initializeApp(); // Fallback to default
+                }
+            });
+        }
+
+        function initializeApp() {
+            document.getElementById('storeCount').textContent = `(${STORES.length} Branches)`;
+            initMap();
+            renderList();
+
+            document.getElementById('sidebarSearch').addEventListener('input', () => {
+                renderList();
+                renderMarkers();
+            });
+
+            document.getElementById('zoomInBtn').addEventListener('click', () => mapInstance.zoomIn());
+            document.getElementById('zoomOutBtn').addEventListener('click', () => mapInstance.zoomOut());
+            document.getElementById('locateBtn').addEventListener('click', () => {
+                mapInstance.flyTo([USER_LOCATION.lat, USER_LOCATION.lng], 13, { duration: 1 });
+                selectedStoreId = null;
+                renderList();
+                renderMarkers();
+            });
+
+            // Handle window resize properly for map to adapt
+            window.addEventListener('resize', () => {
+                if (mapInstance) {
+                    mapInstance.invalidateSize();
+                }
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- MAP FUNCTIONS ---
+        function initMap() {
+            if (mapInstance) { mapInstance.remove(); }
+
+            // Determine center based on data or default
+            let centerLat = USER_LOCATION.lat;
+            let centerLng = USER_LOCATION.lng;
+            if (STORES.length > 0) {
+                centerLat = STORES[0].lat;
+                centerLng = STORES[0].lng;
+            }
+
+            mapInstance = L.map('mapContainer', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([centerLat, centerLng], 13);
+
+            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+            }).addTo(mapInstance);
+
+            markersLayer = L.layerGroup().addTo(mapInstance);
+
+            // Add User Location Marker
+            const userIconHTML = `
+                <div style="transform: translate(-50%, -50%);" class="flex flex-col items-center pointer-events-none">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-full opacity-20 absolute animate-ping"></div>
+                    <div class="w-4 h-4 sm:w-5 sm:h-5 bg-blue-600 rounded-full border-[3px] sm:border-4 border-white shadow-md relative z-10"></div>
+                </div>
+            `;
+            const userIcon = L.divIcon({ className: 'bg-transparent border-none', html: userIconHTML, iconSize: [0, 0] });
+            L.marker([USER_LOCATION.lat, USER_LOCATION.lng], { icon: userIcon, interactive: false }).addTo(mapInstance);
+
+            renderMarkers();
+        }
+
+        function renderMarkers() {
+            if (!markersLayer) return;
+            markersLayer.clearLayers();
+
+            const query = document.getElementById('sidebarSearch').value.toLowerCase();
+            const filteredStores = STORES.filter(store =>
+                store.name.toLowerCase().includes(query) ||
+                store.address.toLowerCase().includes(query)
+            );
+
+            filteredStores.forEach(store => {
+                const isSelected = selectedStoreId === store.id;
+
+                const iconHTML = `
+                    <div style="transform: translate(-50%, -100%); width: max-content;" class="flex items-center relative gap-1 transition-all duration-300 ${isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[500]'}">
+                        <div class="hidden sm:block px-3 py-1.5 text-[11px] font-extrabold rounded-lg shadow-lg whitespace-nowrap ${isSelected ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}">
+                            ${store.name}
+                        </div>
+                        <div class="relative flex flex-col items-center">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 ${isSelected ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-white ring-4 ring-blue-300/50' : 'bg-gradient-to-br from-blue-400 to-blue-600 border-white'}">
+                                N
+                            </div>
+                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 ${isSelected ? 'bg-indigo-600' : 'bg-blue-600'}"></div>
+                        </div>
+                    </div>
+                `;
+
+                const icon = L.divIcon({ className: 'bg-transparent border-none', html: iconHTML, iconSize: null });
+                const marker = L.marker([store.lat, store.lng], { icon }).addTo(markersLayer);
+
+                marker.on('click', () => {
+                    selectStore(store.id);
+                });
+            });
+        }
+
+        // --- LIST & INTERACTION FUNCTIONS ---
+        function selectStore(id) {
+            selectedStoreId = id;
+            const store = STORES.find(s => s.id === id);
+
+            if (store && mapInstance) {
+                // Offset latitude slightly for mobile devices so the pin isn't hidden by the header
+                const isMobile = window.innerWidth < 768;
+                const offsetLat = isMobile ? store.lat + 0.005 : store.lat;
+                mapInstance.flyTo([offsetLat, store.lng], 14, { duration: 0.8 });
+            }
+
+            renderList();
+            renderMarkers();
+
+            // On mobile, scroll the clicked item into view if possible
+            if (window.innerWidth < 768) {
+                setTimeout(() => {
+                    const activeCard = document.getElementById(`store-card-${id}`);
+                    if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
+            }
+        }
+
+        function generateStars(rating) {
+            let starsHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const isFilled = i < Math.floor(rating);
+                starsHTML += `<i data-lucide="star" class="w-3.5 h-3.5 ${isFilled ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}"></i>`;
+            }
+            return starsHTML;
+        }
+
+        function renderList() {
+            const container = document.getElementById('storeListContainer');
+            const query = document.getElementById('sidebarSearch').value.toLowerCase();
+
+            const filteredStores = STORES.filter(store =>
+                store.name.toLowerCase().includes(query) ||
+                store.address.toLowerCase().includes(query)
+            );
+
+            container.innerHTML = '';
+
+            filteredStores.forEach(store => {
+                const isSelected = selectedStoreId === store.id;
+
+                const cardWrapperClass = `cursor-pointer rounded-2xl p-4 sm:p-5 transition-all duration-300 border-2 relative overflow-hidden ${isSelected ? 'bg-gradient-to-br from-[#f8faff] to-[#eff6ff] border-blue-500 shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] transform scale-[1.01] sm:scale-[1.02]' : 'bg-white border-transparent shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-md hover:border-blue-100'}`;
+
+                const cardHTML = `
+                    <div id="store-card-${store.id}" class="${cardWrapperClass}" onclick="selectStore(${store.id})">
+                        ${isSelected ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 rounded-l-2xl"></div>' : ''}
+                        
+                        <h3 class="font-extrabold text-[14px] sm:text-[15px] mb-1 tracking-wide leading-tight ${isSelected ? 'text-blue-700' : 'text-slate-800'}">
+                            ${store.name}
+                        </h3>
+                        
+                        <!-- Rating Section -->
+                        <div class="flex items-center gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+                            <span class="text-xs sm:text-sm font-bold text-slate-700">${store.rating}</span>
+                            <div class="flex">
+                                ${generateStars(store.rating)}
+                            </div>
+                            <span class="text-[10px] sm:text-xs text-slate-500 ml-1">(${store.reviews})</span>
+                            <span class="text-[10px] sm:text-xs text-slate-400 mx-1">•</span>
+                            <span class="text-[10px] sm:text-xs text-slate-500 font-medium">${store.category}</span>
+                        </div>
+                        
+                        <div class="space-y-2.5 sm:space-y-3 text-xs sm:text-sm text-slate-600 font-medium">
+                            <div class="flex items-start gap-2 sm:gap-3">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 mt-0.5 shrink-0"></i>
+                                <span class="leading-snug">${store.address}</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="flex items-center gap-2 sm:gap-3">
+                                    <i data-lucide="phone" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0"></i>
+                                    <span class="text-slate-700">${store.phone}</span>
+                                </div>
+                                
+                                <!-- WhatsApp Button -->
+                                <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center gap-1.5 sm:gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-md shadow-green-500/30 active:scale-95">
+                                    ${whatsappSvg}
+                                    <span class="hidden sm:inline">WhatsApp Us</span>
+                                    <span class="sm:hidden">WhatsApp</span>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="flex items-center gap-2 sm:gap-3">
+                                    <i data-lucide="navigation" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0"></i>
+                                    <span class="${isSelected ? 'text-blue-600 font-semibold' : ''}">${store.distance} miles away</span>
+                                </div>
+                                
+                                <!-- Directions Button -->
+                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}')" class="flex items-center gap-1.5 sm:gap-2 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-sm active:scale-95">
+                                    <i data-lucide="corner-up-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                                    <span class="hidden sm:inline">Directions</span>
+                                    <span class="sm:hidden">Route</span>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0"></i>
+                                <span>Status: <span class="text-slate-800">${store.time}</span></span>
+                            </div>
+                        </div>
+
+                        <!-- User Review Quote -->
+                        <div class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-start gap-2.5">
+                            <div class="bg-blue-50 p-1 sm:p-1.5 rounded-full shrink-0">
+                                <i data-lucide="user" class="w-3 h-3 sm:w-4 sm:h-4 text-blue-500"></i>
+                            </div>
+                            <p class="text-[11px] sm:text-[13px] text-slate-500 italic leading-relaxed">
+                                ${store.reviewQuote}
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+
+            lucide.createIcons();
+        }
+    </script>
+</body>
+
+</html>
