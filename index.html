@@ -93,6 +93,25 @@
 </head>
 <body class="h-screen w-full flex flex-col overflow-hidden relative">
 
+    <!-- --- APP PRELOADER (SPLASH SCREEN) --- -->
+    <div id="app-preloader" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-[14px] sm:rounded-[18px] bg-[#438c16] shadow-[0_8px_30px_rgba(67,140,22,0.3)] mb-5 animate-pulse">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="white" class="w-10 h-10 sm:w-12 sm:h-12 -ml-1 -mt-1">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+        </div>
+        <div class="font-bold text-[26px] sm:text-[32px] tracking-tight leading-none text-black mb-2">
+            Vesloo<span class="text-[#438c16]">Map</span>Studio
+        </div>
+        <div class="text-[13px] sm:text-[14px] text-slate-500 font-medium flex items-center gap-2 mt-4">
+            <svg class="animate-spin h-4 w-4 text-[#438c16]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Setting up your map...
+        </div>
+    </div>
+
     <!-- --- PREMIUM FLOATING HEADER & MOBILE SEARCH --- -->
     <div class="absolute md:relative top-0 left-0 w-full z-[1001] pointer-events-none px-3 pt-3 sm:px-4 sm:pt-4 flex flex-col gap-2 md:block md:p-0">
         
@@ -217,10 +236,22 @@
                     </div>
                 </div>
 
-                <!-- Store Cards Container -->
-                <!-- Mobile padding bottom increased to clear the floating stats footer -->
-                <div id="storeListContainer" class="flex-1 overflow-y-auto hide-scrollbar space-y-3 pb-[100px] md:pb-4 px-1 pt-1">
-                    <!-- Cards will be injected here -->
+                <!-- Store Cards Container & Custom Footer Wrapper -->
+                <!-- Wrapper handles scroll, and ensures footer is pushed to bottom -->
+                <div class="flex-1 overflow-y-auto hide-scrollbar flex flex-col pb-[100px] md:pb-4 px-1 pt-1">
+                    <div id="storeListContainer" class="space-y-3 shrink-0">
+                        <!-- Cards will be injected here -->
+                    </div>
+                    
+                    <!-- Bottom Branding Footer -->
+                    <div class="mt-auto pt-8 pb-2 text-center shrink-0">
+                        <p class="text-[11px] sm:text-xs text-slate-500 font-semibold tracking-wide">
+                            Made with ❤️ in India
+                        </p>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400/80 mt-1 font-medium">
+                            &copy; 2026 Vesloo Technologies
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -451,6 +482,15 @@
 
             window.addEventListener('resize', () => { if(mapInstance) mapInstance.invalidateSize(); });
             lucide.createIcons();
+
+            // Hide the App Preloader with smooth fade after initialization
+            setTimeout(() => {
+                const preloader = document.getElementById('app-preloader');
+                if (preloader) {
+                    preloader.style.opacity = '0';
+                    setTimeout(() => preloader.remove(), 500); // Wait for transition
+                }
+            }, 600); // 600ms base delay to let map and icons load
         }
 
         function initMap() {
