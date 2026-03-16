@@ -3,10 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nalanda Schools Locator</title>
+    <title>VeslooMapStudio Locator</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration for Custom Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -14,26 +39,31 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- PapaParse (Google Sheets se data fetch karne ke liye) -->
+    <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        :root {
+            --safe-bottom: env(safe-area-inset-bottom, 12px);
+        }
 
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
+            background-color: #f0f2f5;
         }
 
         /* Hide Scrollbar */
-        .hide-scrollbar::-webkit-scrollbar { width: 6px; }
+        .hide-scrollbar::-webkit-scrollbar { width: 4px; }
         .hide-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .hide-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.3); border-radius: 10px; }
         .hide-scrollbar:hover::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.5); }
         
-        /* Shimmer Loading Animation */
+        .pb-safe { padding-bottom: var(--safe-bottom); }
+
+        /* Shimmer Loading */
         .shimmer {
             animation: shimmer 2s infinite linear;
             background: linear-gradient(to right, #f6f7f8 4%, #edeef1 25%, #f6f7f8 36%);
@@ -43,141 +73,179 @@
             0% { background-position: -1000px 0; }
             100% { background-position: 1000px 0; }
         }
+
+        /* Card Slide-up Animation */
+        .card-enter {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideUpFade {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Leaflet Controls Fix */
+        .leaflet-control-container .leaflet-top { top: 80px; }
     </style>
 </head>
-<body class="h-screen w-full flex flex-col bg-[#f0f2f5] overflow-hidden">
+<body class="h-screen w-full flex flex-col overflow-hidden relative">
 
     <!-- --- PREMIUM FLOATING HEADER --- -->
-    <div class="px-2 sm:px-4 pt-2 sm:pt-4 shrink-0 z-[1000] relative">
-        <header class="bg-white/80 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl flex items-center justify-between px-3 sm:px-5 py-3 transition-all duration-300">
+    <div class="absolute md:relative top-0 left-0 w-full px-3 sm:px-4 pt-3 sm:pt-4 z-[1001] pointer-events-none shrink-0">
+        <header class="pointer-events-auto bg-white/90 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 transition-all duration-300">
             <!-- Logo Section -->
-            <div class="flex items-center gap-3">
-                <div class="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg shadow-blue-500/40">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="sm:w-6 sm:h-6">
-                        <path d="M12 3L3 21h18L12 3z"/>
+            <div class="flex items-center gap-2 sm:gap-2.5 pl-1 sm:pl-2">
+                <div class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-[8px] bg-[#438c16] shadow-sm shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" class="sm:w-6 sm:h-6 -ml-0.5 -mt-0.5">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
                     </svg>
-                    <!-- Live Tracker Dot -->
-                    <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
-                    </span>
                 </div>
-                <div class="flex flex-col justify-center">
-                    <h1 class="font-black text-[20px] sm:text-[24px] text-slate-800 leading-none tracking-tight m-0 p-0">NALANDA</h1>
-                    <div class="flex items-center gap-1.5 mt-[3px]">
-                        <span class="text-[9px] sm:text-[10px] text-blue-600 font-extrabold tracking-[0.25em] leading-none uppercase">Schools</span>
-                        <span class="px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-600 text-[8px] font-bold uppercase tracking-wider">Live Locator</span>
-                    </div>
+                <div class="font-bold text-[20px] sm:text-[24px] tracking-tight leading-none text-black">
+                    Vesloo<span class="text-[#438c16]">Map</span>Studio
                 </div>
             </div>
 
-            <!-- Global Search (Center) -->
+            <!-- Global Search (Center Desktop) -->
             <div class="hidden md:flex flex-1 max-w-md mx-6">
-                <div class="flex items-center bg-slate-100/80 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-4 py-2.5 w-full transition-colors focus-within:bg-white focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/10">
+                <div class="flex items-center bg-slate-100/80 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-4 py-2 w-full transition-colors focus-within:bg-white focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
                     <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-3"></i>
                     <input 
                         type="text" 
                         id="globalSearch"
-                        placeholder="Yahan branch search karein..." 
+                        placeholder="Search locations..." 
                         class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 font-medium"
                     />
                 </div>
             </div>
 
-            <!-- Actions & Profile -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-md transition-all border border-slate-200/60 hover:text-blue-600">
-                    <i data-lucide="map-pin" class="w-5 h-5"></i>
-                </button>
-                <div class="hidden sm:block h-8 w-px bg-slate-200 mx-1"></div>
-                <button class="hidden sm:flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 border-slate-200/50 hover:border-blue-500 overflow-hidden transition-all">
-                    <!-- Default UI Avatar API -->
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=eff6ff&color=2563eb&bold=true" alt="User Profile" class="w-full h-full object-cover" />
-                </button>
-                <button class="md:hidden p-2 text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
+            <!-- Actions -->
+            <div class="flex items-center gap-2">
+                <button class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-md transition-all border border-slate-200/60 hover:text-brand-600">
+                    <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                 </button>
             </div>
         </header>
     </div>
 
     <!-- --- MAIN CONTENT AREA --- -->
-    <main class="flex-1 flex flex-col md:flex-row p-2 sm:p-4 gap-3 sm:gap-4 overflow-hidden relative z-0">
+    <main class="flex-1 flex flex-col md:flex-row w-full h-full relative z-0 md:p-4 md:pt-0 md:gap-4">
         
         <!-- MAP CONTAINER -->
-        <div class="w-full h-[45vh] md:h-auto md:flex-1 rounded-2xl bg-[#e5e3df] border border-slate-200 overflow-hidden relative shadow-sm flex flex-col z-0 shrink-0">
+        <div class="w-full h-[50vh] sm:h-[45vh] md:h-full md:flex-1 bg-[#e5e3df] md:rounded-2xl border-none md:border md:border-slate-200 relative z-0 shrink-0 shadow-inner md:shadow-sm overflow-hidden">
+            
+            <!-- Mobile Floating Search Bar Over Map -->
+            <div class="md:hidden absolute top-[70px] left-3 right-3 z-[1000]">
+                <div class="flex items-center bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl px-4 py-3 w-full shadow-[0_8px_25px_rgba(0,0,0,0.08)] focus-within:ring-4 focus-within:ring-brand-500/15 transition-all">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-3"></i>
+                    <input 
+                        type="text" 
+                        id="mobileFloatingSearch"
+                        placeholder="Search branches or areas..." 
+                        class="bg-transparent border-none outline-none text-[15px] w-full placeholder-slate-400 text-slate-800 font-medium"
+                    />
+                </div>
+            </div>
+
             <div id="mapContainer" class="w-full h-full absolute inset-0 z-0"></div>
 
-            <!-- Map Controls -->
-            <div class="absolute right-3 top-3 sm:right-4 sm:top-4 flex flex-col gap-2 z-[1000]">
-                <div class="bg-white rounded-lg shadow-md flex flex-col overflow-hidden border border-slate-100">
-                    <button id="zoomInBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors" title="Zoom In">
-                        <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            <!-- Enhanced Native-Feel Map Controls -->
+            <div class="absolute right-3 bottom-[45px] md:bottom-4 md:right-4 flex flex-col z-[1000]">
+                <!-- Zoom Controls -->
+                <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-white flex flex-col overflow-hidden mb-3">
+                    <button id="zoomInBtn" class="p-3 hover:bg-white/90 active:scale-[0.94] transition-all text-slate-700">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
                     </button>
-                    <div class="h-px w-full bg-slate-200"></div>
-                    <button id="zoomOutBtn" class="p-2 sm:p-2.5 hover:bg-slate-50 text-slate-600 transition-colors" title="Zoom Out">
-                        <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    <div class="h-[1px] w-full bg-slate-200/60"></div>
+                    <button id="zoomOutBtn" class="p-3 hover:bg-white/90 active:scale-[0.94] transition-all text-slate-700">
+                        <i data-lucide="minus" class="w-5 h-5"></i>
                     </button>
                 </div>
+                <!-- Locate Control -->
+                <button id="locateBtn" class="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-white p-3 hover:bg-white/90 active:scale-[0.94] transition-all text-brand-600">
+                    <i data-lucide="locate-fixed" class="w-5 h-5"></i>
+                </button>
             </div>
         </div>
 
-        <!-- SIDEBAR LIST -->
-        <div class="w-full flex-1 md:flex-none md:w-[400px] flex flex-col bg-[#f0f2f5] md:bg-transparent shrink-0 z-[1000] min-h-0">
+        <!-- SIDEBAR LIST / BOTTOM SHEET -->
+        <div class="w-full h-[50vh] md:h-full md:w-[420px] bg-white flex flex-col rounded-t-[26px] md:rounded-2xl -mt-8 md:mt-0 relative z-[1000] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] md:shadow-sm md:border md:border-slate-200 shrink-0">
             
-            <div class="flex items-center justify-between mb-2 sm:mb-3 px-1">
-                <h2 class="text-base sm:text-lg font-bold text-slate-800">School Locations</h2>
-            </div>
+            <!-- Mobile Drag Handle -->
+            <div class="w-12 h-[5px] bg-slate-200 rounded-full mx-auto mt-3 mb-2 md:hidden"></div>
 
-            <!-- FEATURE 1: Analytics Dashboard -->
-            <div class="grid grid-cols-2 gap-2 mb-3 px-1">
-                <div class="bg-blue-50 rounded-xl p-2.5 flex flex-col justify-center items-center border border-blue-100 shadow-sm">
-                    <span class="text-[9px] sm:text-[10px] text-blue-500 font-extrabold uppercase tracking-wider">Total Branches</span>
-                    <span class="text-xl sm:text-2xl font-black text-blue-700 leading-none mt-1" id="stat-total">-</span>
-                </div>
-                <div class="bg-amber-50 rounded-xl p-2.5 flex flex-col justify-center items-center border border-amber-100 shadow-sm">
-                    <span class="text-[9px] sm:text-[10px] text-amber-500 font-extrabold uppercase tracking-wider">Network Rating</span>
-                    <div class="flex items-center gap-1 mt-1">
-                        <span class="text-xl sm:text-2xl font-black text-amber-700 leading-none" id="stat-rating">-</span>
-                        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+            <div class="px-4 sm:px-5 pt-1 flex flex-col h-full">
+                
+                <!-- Desktop Only Header -->
+                <h2 class="text-xl font-extrabold text-slate-800 mb-3 tracking-tight hidden md:block">School Locations</h2>
+
+                <!-- Desktop Stats Dashboard -->
+                <div class="hidden md:grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-brand-50/80 rounded-2xl p-3 flex flex-col items-center justify-center border border-brand-100 shadow-sm">
+                        <span class="text-[10px] text-brand-600 font-bold uppercase tracking-widest">Total Branches</span>
+                        <span class="text-2xl font-extrabold text-brand-700 leading-none mt-1" id="stat-total-desktop">-</span>
+                    </div>
+                    <div class="bg-amber-50/80 rounded-2xl p-3 flex flex-col items-center justify-center border border-amber-100 shadow-sm">
+                        <span class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Network Rating</span>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="text-2xl font-extrabold text-amber-700 leading-none" id="stat-rating-desktop">-</span>
+                            <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400 -mt-0.5"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- FEATURE 2: Search & Filters -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-3 sm:mb-4 shrink-0 flex flex-col gap-2">
-                <div class="flex items-center px-2 bg-slate-50 rounded-lg py-1">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
-                    <input 
-                        type="text" 
-                        id="sidebarSearch"
-                        placeholder="Search area or school..." 
-                        class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 py-1"
-                    />
+                <!-- Desktop Search & Filters -->
+                <div class="hidden md:flex flex-col gap-2.5 mb-4 shrink-0">
+                    <div class="flex items-center px-3 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition-all">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
+                        <input 
+                            type="text" 
+                            id="sidebarSearch"
+                            placeholder="Search area or school..." 
+                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700"
+                        />
+                    </div>
+                    <div class="flex items-center px-3 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition-all hidden">
+                         <!-- Filter currently hidden as per previous implementation but structural space maintained if needed -->
+                        <i data-lucide="filter" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
+                        <select id="categoryFilter" class="bg-transparent border-none outline-none text-[15px] md:text-sm w-full text-slate-700 cursor-pointer appearance-none">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="flex items-center px-2 bg-slate-50 rounded-lg py-1 border border-slate-100">
-                    <i data-lucide="filter" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
-                    <select id="categoryFilter" class="bg-transparent border-none outline-none text-xs sm:text-sm w-full text-slate-600 font-medium py-1 cursor-pointer appearance-none">
-                        <option value="all">All Categories</option>
-                        <!-- Options dynamically load hongi -->
-                    </select>
-                </div>
-            </div>
 
-            <div id="storeListContainer" class="flex-1 overflow-y-auto hide-scrollbar space-y-3 sm:space-y-4 pb-4 px-1 min-h-0">
-                <!-- Store cards JS se aayengi -->
+                <!-- Store Cards Container -->
+                <!-- Mobile padding bottom increased to clear the floating stats footer -->
+                <div id="storeListContainer" class="flex-1 overflow-y-auto hide-scrollbar space-y-3 pb-[100px] md:pb-4 px-1 pt-1">
+                    <!-- Cards will be injected here -->
+                </div>
             </div>
         </div>
     </main>
+
+    <!-- --- MOBILE FLOATING FOOTER STATS --- -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white/70 backdrop-blur-[20px] border-t border-slate-200/50 shadow-[0_-10px_25px_rgba(0,0,0,0.05)] z-[2000] px-6 py-4 flex justify-between items-center rounded-t-[26px] pb-safe">
+        <div class="flex flex-col">
+            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Total Branches</span>
+            <span class="text-[24px] font-extrabold text-slate-800 leading-none" id="stat-total-mobile">-</span>
+        </div>
+        <div class="w-[1px] h-8 bg-slate-200"></div>
+        <div class="flex flex-col items-end">
+            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Network Rating</span>
+            <div class="flex items-center gap-1.5">
+                <span class="text-[24px] font-extrabold text-slate-800 leading-none" id="stat-rating-mobile">-</span>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400 -mt-0.5"></i>
+            </div>
+        </div>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- App Logic -->
     <script>
-        // =========================================================================
-        // AAPKI GOOGLE SHEET KA LINK
-        // =========================================================================
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv"; 
 
         let USER_LOCATION = { lat: 16.6925, lng: 74.2306 }; 
@@ -185,10 +253,10 @@
         let selectedStoreId = null;
         let mapInstance = null;
         let markersLayer = null;
+        let userMarker = null;
 
-        const whatsappSvg = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`;
+        const whatsappSvg = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>`;
 
-        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.trim() !== "") {
                 fetchDataFromGoogleSheet();
@@ -197,39 +265,45 @@
             }
         });
 
-        // Smart Category Colors (Preschool vs School)
-        function getCategoryTheme(category) {
-            const cat = category.toLowerCase();
-            if (cat.includes('preschool') || cat.includes('pre-school')) {
-                return { grad: 'from-amber-400 to-orange-500', border: 'border-orange-500', text: 'text-orange-700', bg: 'bg-orange-100', dot: 'bg-orange-600' };
-            }
-            // Default (School / Ed Institution)
-            return { grad: 'from-blue-400 to-blue-600', border: 'border-blue-500', text: 'text-blue-700', bg: 'bg-blue-100', dot: 'bg-blue-600' };
+        // Haversine Distance
+        function calculateRealDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; 
+        }
+
+        function updateAndSortDistances() {
+            if (STORES.length === 0) return; 
+            STORES.forEach(store => {
+                const dist = calculateRealDistance(USER_LOCATION.lat, USER_LOCATION.lng, store.lat, store.lng);
+                store.distance = dist.toFixed(1); 
+            });
+            STORES.sort((a, b) => {
+                if (b.rating !== a.rating) return b.rating - a.rating; 
+                return b.reviews - a.reviews; 
+            });
         }
 
         function getColumnValue(row, possibleNames) {
             const rowKeys = Object.keys(row);
+            for (let key of rowKeys) { if (possibleNames.includes(key.toLowerCase().trim())) return row[key]; }
             for (let key of rowKeys) {
-                if (possibleNames.includes(key.toLowerCase().trim())) return row[key];
-            }
-            for (let key of rowKeys) {
-                for (let name of possibleNames) {
-                    if (key.toLowerCase().trim().includes(name)) return row[key];
-                }
+                for (let name of possibleNames) { if (key.toLowerCase().trim().includes(name)) return row[key]; }
             }
             return null; 
         }
 
-        // Google Sheet CSV Fetch Function with Skeleton Loader
         function fetchDataFromGoogleSheet() {
             const container = document.getElementById('storeListContainer');
-            // FEATURE: Professional Skeleton Loading State
             container.innerHTML = `
-                <div class="space-y-4">
+                <div class="space-y-3">
                     ${[1, 2, 3].map(() => `
-                        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                            <div class="shimmer h-4 w-3/4 rounded mb-3"></div>
-                            <div class="shimmer h-3 w-1/2 rounded mb-4"></div>
+                        <div class="bg-white rounded-[18px] p-4 border border-slate-100 shadow-sm">
+                            <div class="shimmer h-4 w-2/3 rounded mb-3"></div>
+                            <div class="shimmer h-3 w-1/3 rounded mb-4"></div>
                             <div class="space-y-2">
                                 <div class="shimmer h-3 w-full rounded"></div>
                                 <div class="shimmer h-3 w-5/6 rounded"></div>
@@ -248,7 +322,6 @@
                     const parsedStores = results.data.map((row, index) => {
                         const latVal = getColumnValue(row, ['lat', 'latitude', 'y point']);
                         const lngVal = getColumnValue(row, ['lng', 'longitude', 'long', 'x point']);
-                        
                         return {
                             id: index + 100, 
                             name: getColumnValue(row, ['name', 'title', 'school', 'branch']) || "Nalanda School",
@@ -260,7 +333,7 @@
                             distance: "0", 
                             address: getColumnValue(row, ['address', 'location']) || "No Address Provided",
                             phone: String(getColumnValue(row, ['phone', 'mobile', 'contact', 'whatsapp']) || ""),
-                            time: getColumnValue(row, ['time', 'hours', 'status']) || "Open",
+                            time: getColumnValue(row, ['time', 'hours', 'status']) || "Open 09:00am - 5:00pm",
                             reviewQuote: getColumnValue(row, ['reviewquote', 'quote', 'review']) || ""
                         };
                     }).filter(s => !isNaN(s.lat) && !isNaN(s.lng)); 
@@ -271,38 +344,49 @@
                     } else {
                         STORES = []; 
                     }
-                    
-                    initializeApp();
+                    fetchUserLocationAndInit();
                 },
-                error: function(error) {
-                    console.error("Sheet Loading Error:", error);
-                    STORES = []; 
-                    initializeApp(); 
-                }
+                error: function() { STORES = []; fetchUserLocationAndInit(); }
             });
         }
 
-        // FEATURE: Update Admin Dashboard Stats & Category Filter
         function updateAnalyticsAndCategories() {
-            // Update Dashboard
-            document.getElementById('stat-total').textContent = STORES.length;
+            const totalStr = STORES.length;
+            let avgStr = '-';
             if(STORES.length > 0) {
                 const avg = STORES.reduce((sum, s) => sum + s.rating, 0) / STORES.length;
-                document.getElementById('stat-rating').textContent = avg.toFixed(1);
+                avgStr = avg.toFixed(1);
             }
-
-            // Populate Category Filter
-            const categories = [...new Set(STORES.map(s => s.category))].filter(Boolean);
-            const filterDropdown = document.getElementById('categoryFilter');
             
-            // Keep default "All", remove old options, add new ones
-            filterDropdown.innerHTML = '<option value="all">All Categories</option>';
-            categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.toLowerCase();
-                opt.textContent = cat;
-                filterDropdown.appendChild(opt);
-            });
+            // Desktop Stats
+            const statTotalDesktop = document.getElementById('stat-total-desktop');
+            if(statTotalDesktop) statTotalDesktop.textContent = totalStr;
+            const statRatingDesktop = document.getElementById('stat-rating-desktop');
+            if(statRatingDesktop) statRatingDesktop.textContent = avgStr;
+
+            // Mobile Stats
+            const statTotalMobile = document.getElementById('stat-total-mobile');
+            if(statTotalMobile) statTotalMobile.textContent = totalStr;
+            const statRatingMobile = document.getElementById('stat-rating-mobile');
+            if(statRatingMobile) statRatingMobile.textContent = avgStr;
+        }
+
+        function fetchUserLocationAndInit() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        USER_LOCATION.lat = position.coords.latitude;
+                        USER_LOCATION.lng = position.coords.longitude;
+                        updateAndSortDistances();
+                        initializeApp();
+                    },
+                    () => { updateAndSortDistances(); initializeApp(); },
+                    { timeout: 5000 }
+                );
+            } else {
+                updateAndSortDistances();
+                initializeApp();
+            }
         }
 
         function initializeApp() {
@@ -311,50 +395,54 @@
             
             const globalSearchInput = document.getElementById('globalSearch');
             const sidebarSearchInput = document.getElementById('sidebarSearch');
-            const categoryFilter = document.getElementById('categoryFilter');
+            const mobileFloatingSearch = document.getElementById('mobileFloatingSearch');
 
-            // Sync interactions
-            globalSearchInput.addEventListener('input', (e) => {
-                sidebarSearchInput.value = e.target.value;
-                renderList(); renderMarkers(); 
-            });
-            sidebarSearchInput.addEventListener('input', (e) => {
-                globalSearchInput.value = e.target.value;
-                renderList(); renderMarkers(); 
-            });
-            categoryFilter.addEventListener('change', () => {
+            // Sync interactions across all search inputs
+            const updateSearches = (val) => {
+                if(globalSearchInput) globalSearchInput.value = val;
+                if(sidebarSearchInput) sidebarSearchInput.value = val;
+                if(mobileFloatingSearch) mobileFloatingSearch.value = val;
                 renderList(); renderMarkers();
-                selectedStoreId = null; // reset selection on filter change
-            });
+            };
+
+            if(globalSearchInput) globalSearchInput.addEventListener('input', (e) => updateSearches(e.target.value));
+            if(sidebarSearchInput) sidebarSearchInput.addEventListener('input', (e) => updateSearches(e.target.value));
+            if(mobileFloatingSearch) mobileFloatingSearch.addEventListener('input', (e) => updateSearches(e.target.value));
 
             document.getElementById('zoomInBtn').addEventListener('click', () => mapInstance.zoomIn());
             document.getElementById('zoomOutBtn').addEventListener('click', () => mapInstance.zoomOut());
-
-            window.addEventListener('resize', () => {
-                if(mapInstance) mapInstance.invalidateSize();
+            
+            document.getElementById('locateBtn').addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        USER_LOCATION.lat = pos.coords.latitude;
+                        USER_LOCATION.lng = pos.coords.longitude;
+                        mapInstance.flyTo([USER_LOCATION.lat, USER_LOCATION.lng], 14, { duration: 1 });
+                        selectedStoreId = null;
+                        if(userMarker) userMarker.setLatLng([USER_LOCATION.lat, USER_LOCATION.lng]);
+                        updateAndSortDistances();
+                        renderList();
+                        renderMarkers();
+                    });
+                }
             });
 
+            window.addEventListener('resize', () => { if(mapInstance) mapInstance.invalidateSize(); });
             lucide.createIcons();
         }
 
-        // --- MAP FUNCTIONS ---
         function initMap() {
             if (mapInstance) { mapInstance.remove(); }
-
-            mapInstance = L.map('mapContainer', {
-                zoomControl: false,
-                attributionControl: false
-            });
-
-            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-            }).addTo(mapInstance);
-
+            mapInstance = L.map('mapContainer', { zoomControl: false, attributionControl: false });
+            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(mapInstance);
             markersLayer = L.layerGroup().addTo(mapInstance);
+
+            const userIconHTML = `<div style="transform: translate(-50%, -50%);" class="flex flex-col items-center pointer-events-none"><div class="w-12 h-12 bg-blue-500 rounded-full opacity-20 absolute animate-ping"></div><div class="w-4 h-4 bg-blue-600 rounded-full border-[3px] border-white shadow-md relative z-10"></div></div>`;
+            const userIcon = L.divIcon({ className: 'bg-transparent border-none', html: userIconHTML, iconSize: [0,0] });
+            userMarker = L.marker([USER_LOCATION.lat, USER_LOCATION.lng], { icon: userIcon, interactive: false }).addTo(mapInstance);
 
             renderMarkers();
 
-            // Center map strictly on School points
             if (STORES.length > 0) {
                 const bounds = L.latLngBounds(STORES.map(store => [store.lat, store.lng]));
                 mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
@@ -364,16 +452,10 @@
         }
 
         function getFilteredStores() {
-            const query = document.getElementById('sidebarSearch').value.toLowerCase();
-            const catFilter = document.getElementById('categoryFilter').value;
-
+            // Check whichever input is visible/active
+            const query = (window.innerWidth < 768 ? document.getElementById('mobileFloatingSearch').value : document.getElementById('sidebarSearch').value).toLowerCase();
             return STORES.filter(store => {
-                const matchesSearch = store.name.toLowerCase().includes(query) || store.address.toLowerCase().includes(query);
-                const matchesCat = catFilter === 'all' || store.category.toLowerCase() === catFilter;
-                return matchesSearch && matchesCat;
-            }).sort((a, b) => {
-                if (b.rating !== a.rating) return b.rating - a.rating; 
-                return b.reviews - a.reviews; 
+                return store.name.toLowerCase().includes(query) || store.address.toLowerCase().includes(query);
             });
         }
 
@@ -381,55 +463,45 @@
             if (!markersLayer) return;
             markersLayer.clearLayers();
 
-            const filteredStores = getFilteredStores();
-
-            filteredStores.forEach(store => {
+            getFilteredStores().forEach(store => {
                 const isSelected = selectedStoreId === store.id;
-                const theme = getCategoryTheme(store.category);
                 
-                // FEATURE: Custom colored pins based on category
                 const iconHTML = `
                     <div style="transform: translate(-50%, -100%); width: max-content;" class="flex items-center relative gap-1 transition-all duration-300 ${isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[500]'}">
                         <div class="hidden sm:block px-3 py-1.5 text-[11px] font-extrabold rounded-lg shadow-lg whitespace-nowrap ${isSelected ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}">
                             ${store.name}
                         </div>
                         <div class="relative flex flex-col items-center">
-                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 ${isSelected ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-white ring-4 ring-blue-300/50' : `bg-gradient-to-br ${theme.grad} border-white`}">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 ${isSelected ? 'bg-gradient-to-br from-brand-500 to-brand-700 border-white ring-4 ring-brand-300/50' : 'bg-gradient-to-br from-brand-400 to-brand-600 border-white'}">
                                 N
                             </div>
-                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 ${isSelected ? 'bg-indigo-600' : theme.dot}"></div>
+                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 ${isSelected ? 'bg-brand-700' : 'bg-brand-600'}"></div>
                         </div>
                     </div>
                 `;
 
                 const icon = L.divIcon({ className: 'bg-transparent border-none', html: iconHTML, iconSize: null });
                 const marker = L.marker([store.lat, store.lng], { icon }).addTo(markersLayer);
-                
-                marker.on('click', () => {
-                    selectStore(store.id);
-                });
+                marker.on('click', () => selectStore(store.id));
             });
         }
 
-        // --- LIST & INTERACTION FUNCTIONS ---
         function selectStore(id) {
             selectedStoreId = id;
             const store = STORES.find(s => s.id === id);
             
             if (store && mapInstance) {
                 const isMobile = window.innerWidth < 768;
-                const offsetLat = isMobile ? store.lat + 0.005 : store.lat;
+                const offsetLat = isMobile ? store.lat + 0.003 : store.lat;
                 mapInstance.flyTo([offsetLat, store.lng], 15, { duration: 0.8 });
             }
             
             renderList();
             renderMarkers();
             
-            // FEATURE: Smoother, more centered mobile scrolling
             if(window.innerWidth < 768) {
                 setTimeout(() => {
                     const activeCard = document.getElementById(`store-card-${id}`);
-                    // 'center' block brings it exactly to the middle of the view
                     if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
             }
@@ -439,7 +511,7 @@
             let starsHTML = '';
             for(let i = 0; i < 5; i++) {
                 const isFilled = i < Math.floor(rating);
-                starsHTML += `<i data-lucide="star" class="w-3.5 h-3.5 ${isFilled ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200'}"></i>`;
+                starsHTML += `<i data-lucide="star" class="w-3.5 h-3.5 ${isFilled ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}"></i>`;
             }
             return starsHTML;
         }
@@ -447,7 +519,6 @@
         function renderList() {
             const container = document.getElementById('storeListContainer');
             const filteredStores = getFilteredStores();
-
             container.innerHTML = ''; 
 
             if (filteredStores.length === 0) {
@@ -455,81 +526,70 @@
                     <div class="p-8 text-center flex flex-col items-center justify-center h-full text-slate-400">
                         <i data-lucide="map-x" class="w-10 h-10 mb-3 opacity-50"></i>
                         <p class="font-medium text-sm">Koi branch nahi mili.</p>
-                        <p class="text-xs mt-1 opacity-70">Filters change karke dekhein.</p>
                     </div>
                 `;
                 lucide.createIcons();
                 return;
             }
 
-            filteredStores.forEach(store => {
+            filteredStores.forEach((store, index) => {
                 const isSelected = selectedStoreId === store.id;
-                const theme = getCategoryTheme(store.category);
                 
-                const cardWrapperClass = `cursor-pointer rounded-2xl p-4 sm:p-5 transition-all duration-300 border-2 relative overflow-hidden ${isSelected ? `bg-gradient-to-br from-[#f8faff] to-[#eff6ff] ${theme.border} shadow-md transform scale-[1.01]` : 'bg-white border-transparent shadow-sm hover:shadow-md hover:border-slate-200'}`;
-                
+                // Add animated slide-up classes
                 const cardHTML = `
-                    <div id="store-card-${store.id}" class="${cardWrapperClass}" onclick="selectStore(${store.id})">
-                        ${isSelected ? `<div class="absolute left-0 top-0 bottom-0 w-1.5 ${theme.dot} rounded-l-2xl"></div>` : ''}
+                    <div id="store-card-${store.id}" class="card-enter bg-white rounded-[18px] p-4 border ${isSelected ? 'border-brand-400 shadow-[0_4px_15px_rgba(59,130,246,0.15)] bg-brand-50/30' : 'border-slate-200 shadow-sm hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(59,130,246,0.12)]'} transition-all cursor-pointer relative overflow-hidden" style="animation-delay: ${index * 40}ms" onclick="selectStore(${store.id})">
+                        ${isSelected ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-brand-400 to-brand-600"></div>' : ''}
                         
-                        <div class="flex justify-between items-start mb-1 gap-2">
-                            <h3 class="font-extrabold text-[14px] sm:text-[15px] tracking-wide leading-tight ${isSelected ? 'text-slate-900' : 'text-slate-800'}">
-                                ${store.name}
-                            </h3>
-                            <span class="${theme.bg} ${theme.text} px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap border border-white/50 shadow-sm">${store.category}</span>
+                        <div class="flex justify-between items-start gap-2 mb-1.5 pl-1.5">
+                            <h3 class="font-bold text-[16px] sm:text-[17px] leading-snug ${isSelected ? 'text-brand-700' : 'text-slate-800'} pr-2">${store.name}</h3>
+                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold border border-slate-200 whitespace-nowrap shrink-0">${store.category}</span>
                         </div>
                         
-                        <!-- Rating Section -->
-                        <div class="flex items-center gap-1 sm:gap-1.5 mb-3">
-                            <span class="text-xs sm:text-sm font-bold text-slate-700">${store.rating}</span>
-                            <div class="flex">
+                        <!-- Rating and Distance Inline -->
+                        <div class="flex items-center gap-2 mb-3.5 pl-1.5">
+                            <span class="text-[13px] font-bold text-slate-800">${store.rating}</span>
+                            <div class="flex text-amber-400">
                                 ${generateStars(store.rating)}
                             </div>
-                            <span class="text-[10px] sm:text-xs text-slate-500 ml-1">(${store.reviews})</span>
+                            <span class="text-[11px] text-slate-400 font-medium">(${store.reviews})</span>
+                            <span class="bg-brand-50 text-brand-600 px-2 py-[2px] rounded-full text-[10px] font-bold tracking-wide">${store.distance} km</span>
                         </div>
                         
-                        <div class="space-y-2.5 sm:space-y-3 text-xs sm:text-sm text-slate-600 font-medium">
-                            <div class="flex items-start gap-2 sm:gap-3">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 mt-0.5 shrink-0"></i>
-                                <span class="leading-snug">${store.address}</span>
+                        <div class="space-y-3.5 pl-1.5">
+                            <div class="flex items-start gap-2.5">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+                                <span class="text-[13px] text-slate-600 leading-snug">${store.address}</span>
                             </div>
                             
-                            <div class="flex items-center justify-between mt-1">
-                                <div class="flex items-center gap-2 sm:gap-3">
-                                    <i data-lucide="phone" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0"></i>
-                                    <span class="text-slate-700">${store.phone}</span>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i data-lucide="phone" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                    <span class="text-[13px] text-slate-700 font-medium">${store.phone}</span>
                                 </div>
                                 
-                                <!-- WhatsApp Button -->
-                                <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center gap-1.5 sm:gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-md shadow-green-500/30 active:scale-95">
-                                    ${whatsappSvg}
-                                    <span class="hidden sm:inline">WhatsApp</span>
-                                    <span class="sm:hidden">Chat</span>
+                                <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full text-[12px] font-bold transition-all shadow-sm active:scale-[0.96]" style="padding: 6px 14px;">
+                                    ${whatsappSvg} Chat
                                 </button>
                             </div>
 
-                            <div class="flex items-center justify-between mt-1">
-                                <div class="flex items-center gap-2 sm:gap-3">
-                                    <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0"></i>
-                                    <span>Status: <span class="text-slate-800">${store.time}</span></span>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i data-lucide="clock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                    <span class="text-[13px] text-slate-600">Status: <span class="text-slate-800 font-medium">${store.time}</span></span>
                                 </div>
                                 
-                                <!-- FEATURE: Smart Directions (dirflg=d for Driving mode) -->
-                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&dirflg=d')" class="flex items-center gap-1.5 sm:gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all shadow-sm active:scale-95 border border-blue-100">
-                                    <i data-lucide="corner-up-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                                    <span class="hidden sm:inline">Directions</span>
-                                    <span class="sm:hidden">Route</span>
+                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&dirflg=d')" class="flex items-center gap-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 border border-brand-100 rounded-full text-[12px] font-bold transition-all shadow-sm active:scale-[0.96]" style="padding: 6px 14px;">
+                                    <i data-lucide="corner-up-right" class="w-3.5 h-3.5"></i> Route
                                 </button>
                             </div>
                         </div>
 
-                        <!-- User Review Quote -->
+                        <!-- Review Quote Block -->
                         ${store.reviewQuote ? `
-                        <div class="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 flex items-start gap-2.5 bg-slate-50/50 p-2 rounded-lg">
-                            <div class="bg-white p-1 sm:p-1.5 rounded-full shrink-0 shadow-sm border border-slate-100">
-                                <i data-lucide="message-square" class="w-3 h-3 sm:w-4 sm:h-4 text-blue-400"></i>
-                            </div>
-                            <p class="text-[11px] sm:text-[12px] text-slate-500 italic leading-relaxed">
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-start gap-2 relative pl-3">
+                            <div class="absolute left-0 top-4 bottom-0 w-[3px] bg-brand-300 rounded-full"></div>
+                            <span class="text-brand-200 text-[32px] absolute -top-1.5 left-2 leading-none">"</span>
+                            <p class="text-[12px] text-slate-500 italic leading-relaxed pl-4 pt-1 font-medium">
                                 ${store.reviewQuote}
                             </p>
                         </div>
