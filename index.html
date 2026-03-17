@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VeslooMapStudio Locator</title>
-    
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Tailwind Configuration for Custom Colors -->
     <script>
         tailwind.config = {
@@ -32,10 +34,10 @@
             }
         }
     </script>
-    
+
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -56,12 +58,26 @@
         }
 
         /* Hide Scrollbar */
-        .hide-scrollbar::-webkit-scrollbar { width: 4px; }
-        .hide-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .hide-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.3); border-radius: 10px; }
-        .hide-scrollbar:hover::-webkit-scrollbar-thumb { background-color: rgba(148, 163, 184, 0.5); }
-        
-        .pb-safe { padding-bottom: var(--safe-bottom); }
+        .hide-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
+        .hide-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.5);
+        }
+
+        .pb-safe {
+            padding-bottom: var(--safe-bottom);
+        }
 
         /* Shimmer Loading */
         .shimmer {
@@ -69,9 +85,15 @@
             background: linear-gradient(to right, #f6f7f8 4%, #edeef1 25%, #f6f7f8 36%);
             background-size: 1000px 100%;
         }
+
         @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
         }
 
         /* Card Slide-up Animation */
@@ -80,6 +102,7 @@
             transform: translateY(20px);
             animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
         @keyframes slideUpFade {
             to {
                 opacity: 1;
@@ -88,14 +111,92 @@
         }
 
         /* Leaflet Controls Fix */
-        .leaflet-control-container .leaflet-top { top: 80px; }
+        .leaflet-control-container .leaflet-top {
+            top: 80px;
+        }
+
+        /* WhatsApp Floating Button Styles */
+        #wa-float {
+            position: fixed;
+            bottom: 90px;
+            /* Safely above mobile footer */
+            right: 20px;
+            background-color: #25D366;
+            color: white;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            z-index: 3000;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+        }
+
+        #wa-float:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+        }
+
+        #wa-float svg {
+            fill: white;
+            width: 30px;
+            height: 30px;
+        }
+
+        .wa-tip {
+            position: absolute;
+            right: 70px;
+            top: 50%;
+            background-color: white;
+            color: #1e293b;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translate(10px, -50%) scale(0.95);
+            transform-origin: right center;
+        }
+
+        #wa-float:hover .wa-tip {
+            opacity: 1;
+            transform: translate(0, -50%) scale(1);
+        }
+
+        @media (min-width: 768px) {
+            #wa-float {
+                bottom: 30px;
+                right: 30px;
+                width: 60px;
+                height: 60px;
+            }
+
+            #wa-float svg {
+                width: 34px;
+                height: 34px;
+            }
+
+            .wa-tip {
+                right: 75px;
+            }
+        }
     </style>
 </head>
+
 <body class="h-screen w-full flex flex-col overflow-hidden relative">
 
     <!-- --- APP PRELOADER (SPLASH SCREEN) --- -->
-    <div id="app-preloader" class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-[14px] sm:rounded-[18px] bg-[#438c16] shadow-[0_8px_30px_rgba(67,140,22,0.3)] mb-5 animate-pulse">
+    <div id="app-preloader"
+        class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
+        <div
+            class="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-[14px] sm:rounded-[18px] bg-[#438c16] shadow-[0_8px_30px_rgba(67,140,22,0.3)] mb-5 animate-pulse">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="white" class="w-10 h-10 sm:w-12 sm:h-12 -ml-1 -mt-1">
                 <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
             </svg>
@@ -104,27 +205,37 @@
             Vesloo<span class="text-[#438c16]">Map</span>Studio
         </div>
         <div class="text-[13px] sm:text-[14px] text-slate-500 font-medium flex items-center gap-2 mt-4">
-            <svg class="animate-spin h-4 w-4 text-[#438c16]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-4 w-4 text-[#438c16]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
             </svg>
-            Setting up your map...
+            Made with ❤️ in India
+
+            © 2026 Vesloo Technologies
         </div>
     </div>
 
     <!-- --- PREMIUM FLOATING HEADER & MOBILE SEARCH --- -->
-    <div class="absolute md:relative top-0 left-0 w-full z-[1001] pointer-events-none px-3 pt-3 sm:px-4 sm:pt-4 flex flex-col gap-2 md:block md:p-0">
-        
+    <div
+        class="fixed md:relative top-0 left-0 w-full z-[1001] pointer-events-none px-3 pt-3 sm:px-4 sm:pt-4 flex flex-col gap-2 md:block md:p-0">
+
         <!-- Header -->
-        <header class="pointer-events-auto bg-white/95 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl flex items-center justify-between px-3 py-2.5 md:px-5 md:py-3 md:mt-4 md:mx-4 transition-all duration-300">
+        <header
+            class="pointer-events-auto bg-white/95 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl flex items-center justify-between px-3 py-2.5 md:px-5 md:py-3 md:mt-4 md:mx-4 transition-all duration-300">
             <!-- Logo Section -->
             <div class="flex items-center gap-2 pl-1">
-                <div class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-[8px] bg-[#438c16] shadow-sm shrink-0">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" class="w-5 h-5 sm:w-6 sm:h-6 -ml-0.5 -mt-0.5">
+                <div
+                    class="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-[8px] bg-[#438c16] shadow-sm shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white"
+                        class="w-5 h-5 sm:w-6 sm:h-6 -ml-0.5 -mt-0.5">
                         <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
                     </svg>
                 </div>
-                <div class="font-bold text-[18px] sm:text-[24px] tracking-tight leading-none text-black hidden sm:block">
+                <div
+                    class="font-bold text-[18px] sm:text-[24px] tracking-tight leading-none text-black hidden sm:block">
                     Vesloo<span class="text-[#438c16]">Map</span>Studio
                 </div>
                 <div class="font-bold text-[18px] tracking-tight leading-none text-black sm:hidden">
@@ -134,90 +245,100 @@
 
             <!-- Global Search (Center Desktop) -->
             <div class="hidden md:flex flex-1 max-w-md mx-6">
-                <div class="flex items-center bg-slate-100/80 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-4 py-2 w-full transition-colors focus-within:bg-white focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
+                <div
+                    class="flex items-center bg-slate-100/80 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-4 py-2 w-full transition-colors focus-within:bg-white focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
                     <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-3"></i>
-                    <input 
-                        type="text" 
-                        id="globalSearch"
-                        placeholder="Search locations..." 
-                        class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 font-medium"
-                    />
+                    <input type="text" id="globalSearch" placeholder="Search locations..."
+                        class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700 font-medium" />
                 </div>
             </div>
 
             <!-- Actions (Category Filter replacing User Profile) -->
             <div class="flex items-center gap-2">
-                <div class="relative flex items-center bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 shadow-sm transition-all cursor-pointer">
+                <div
+                    class="relative flex items-center bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 shadow-sm transition-all cursor-pointer">
                     <i data-lucide="filter" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 shrink-0"></i>
-                    <select id="headerCategoryFilter" class="bg-transparent border-none outline-none text-[11px] sm:text-sm text-slate-700 cursor-pointer appearance-none pl-1.5 pr-4 sm:pr-6 font-medium">
+                    <select id="headerCategoryFilter"
+                        class="bg-transparent border-none outline-none text-[11px] sm:text-sm text-slate-700 cursor-pointer appearance-none pl-1.5 pr-4 sm:pr-6 font-medium">
                         <option value="all">All Categories</option>
                     </select>
-                    <i data-lucide="chevron-down" class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 absolute right-1.5 sm:right-2 pointer-events-none"></i>
+                    <i data-lucide="chevron-down"
+                        class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 absolute right-1.5 sm:right-2 pointer-events-none"></i>
                 </div>
             </div>
         </header>
 
         <!-- Mobile Floating Search Bar -->
-        <div class="md:hidden pointer-events-auto flex items-center bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl px-4 py-2.5 w-full shadow-[0_8px_25px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+        <div
+            class="md:hidden pointer-events-auto flex items-center bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl px-4 py-2.5 w-full shadow-[0_8px_25px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
             <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-3 shrink-0"></i>
-            <input 
-                type="text" 
-                id="mobileFloatingSearch"
-                placeholder="Search branches or areas..." 
-                class="bg-transparent border-none outline-none text-[15px] w-full placeholder-slate-400 text-slate-800 font-medium"
-            />
+            <input type="text" id="mobileFloatingSearch" placeholder="Search branches or areas..."
+                class="bg-transparent border-none outline-none text-[15px] w-full placeholder-slate-400 text-slate-800 font-medium" />
         </div>
 
     </div>
 
     <!-- --- MAIN CONTENT AREA --- -->
     <main class="flex-1 flex flex-col md:flex-row w-full h-full relative z-0 md:p-4 md:pt-0 md:gap-4">
-        
+
         <!-- MAP CONTAINER -->
-        <div class="w-full h-[50vh] sm:h-[45vh] md:h-full md:flex-1 bg-[#e5e3df] md:rounded-2xl border-none md:border md:border-slate-200 relative z-0 shrink-0 shadow-inner md:shadow-sm overflow-hidden">
-            
+        <div
+            class="w-full h-[50vh] sm:h-[45vh] md:h-full md:flex-1 bg-[#e5e3df] md:rounded-2xl border-none md:border md:border-slate-200 relative z-0 shrink-0 shadow-inner md:shadow-sm overflow-hidden">
+
             <div id="mapContainer" class="w-full h-full absolute inset-0 z-0"></div>
 
             <!-- Enhanced Native-Feel Map Controls -->
             <div class="absolute right-3 bottom-[45px] md:bottom-4 md:right-4 flex flex-col z-[1000]">
                 <!-- Zoom Controls -->
-                <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col overflow-hidden mb-3">
-                    <button id="zoomInBtn" class="p-3 hover:bg-slate-50 active:scale-[0.94] transition-all text-slate-700">
+                <div
+                    class="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col overflow-hidden mb-3">
+                    <button id="zoomInBtn"
+                        class="p-3 hover:bg-slate-50 active:scale-[0.94] transition-all text-slate-700">
                         <i data-lucide="plus" class="w-5 h-5"></i>
                     </button>
                     <div class="h-[1px] w-full bg-slate-200/60"></div>
-                    <button id="zoomOutBtn" class="p-3 hover:bg-slate-50 active:scale-[0.94] transition-all text-slate-700">
+                    <button id="zoomOutBtn"
+                        class="p-3 hover:bg-slate-50 active:scale-[0.94] transition-all text-slate-700">
                         <i data-lucide="minus" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <!-- Locate Control -->
-                <button id="locateBtn" class="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-slate-100 p-3 hover:bg-slate-50 active:scale-[0.94] transition-all text-brand-600">
+                <button id="locateBtn"
+                    class="bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-slate-100 p-3 hover:bg-slate-50 active:scale-[0.94] transition-all text-brand-600">
                     <i data-lucide="locate-fixed" class="w-5 h-5"></i>
                 </button>
             </div>
         </div>
 
         <!-- SIDEBAR LIST / BOTTOM SHEET -->
-        <div class="w-full h-[50vh] md:h-full md:w-[420px] bg-white flex flex-col rounded-t-[26px] md:rounded-2xl -mt-8 md:mt-0 relative z-[1000] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] md:shadow-sm md:border md:border-slate-200 shrink-0">
-            
+        <div
+            class="w-full h-[50vh] md:h-full md:w-[420px] bg-white flex flex-col rounded-t-[26px] md:rounded-2xl -mt-8 md:mt-0 relative z-[1000] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] md:shadow-sm md:border md:border-slate-200 shrink-0">
+
             <!-- Mobile Drag Handle -->
             <div class="w-12 h-[5px] bg-slate-200 rounded-full mx-auto mt-3 mb-2 md:hidden"></div>
 
             <div class="px-4 sm:px-5 pt-1 flex flex-col h-full">
-                
+
                 <!-- Desktop Only Header -->
-                <h2 class="text-xl font-extrabold text-slate-800 mb-3 tracking-tight hidden md:block">School Locations</h2>
+                <h2 class="text-xl font-extrabold text-slate-800 mb-3 tracking-tight hidden md:block">School Locations
+                </h2>
 
                 <!-- Desktop Stats Dashboard -->
                 <div class="hidden md:grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-brand-50/80 rounded-2xl p-3 flex flex-col items-center justify-center border border-brand-100 shadow-sm">
-                        <span class="text-[10px] text-brand-600 font-bold uppercase tracking-widest">Total Branches</span>
-                        <span class="text-2xl font-extrabold text-brand-700 leading-none mt-1" id="stat-total-desktop">-</span>
+                    <div
+                        class="bg-brand-50/80 rounded-2xl p-3 flex flex-col items-center justify-center border border-brand-100 shadow-sm">
+                        <span class="text-[10px] text-brand-600 font-bold uppercase tracking-widest">Total
+                            Branches</span>
+                        <span class="text-2xl font-extrabold text-brand-700 leading-none mt-1"
+                            id="stat-total-desktop">-</span>
                     </div>
-                    <div class="bg-amber-50/80 rounded-2xl p-3 flex flex-col items-center justify-center border border-amber-100 shadow-sm">
-                        <span class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Network Rating</span>
+                    <div
+                        class="bg-amber-50/80 rounded-2xl p-3 flex flex-col items-center justify-center border border-amber-100 shadow-sm">
+                        <span class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Network
+                            Rating</span>
                         <div class="flex items-center gap-1 mt-1">
-                            <span class="text-2xl font-extrabold text-amber-700 leading-none" id="stat-rating-desktop">-</span>
+                            <span class="text-2xl font-extrabold text-amber-700 leading-none"
+                                id="stat-rating-desktop">-</span>
                             <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400 -mt-0.5"></i>
                         </div>
                     </div>
@@ -225,26 +346,25 @@
 
                 <!-- Desktop Search -->
                 <div class="hidden md:flex flex-col gap-2.5 mb-4 shrink-0">
-                    <div class="flex items-center px-3 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition-all">
+                    <div
+                        class="flex items-center px-3 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition-all">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 mr-2 shrink-0"></i>
-                        <input 
-                            type="text" 
-                            id="sidebarSearch"
-                            placeholder="Search area or school..." 
-                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700"
-                        />
+                        <input type="text" id="sidebarSearch" placeholder="Search area or school..."
+                            class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400 text-slate-700" />
                     </div>
                 </div>
 
                 <!-- Store Cards Container & Custom Footer Wrapper -->
                 <!-- Wrapper handles scroll, and ensures footer is pushed to bottom -->
-                <div class="flex-1 overflow-y-auto scroll-smooth hide-scrollbar flex flex-col pb-[100px] md:pb-4 px-1 pt-1">
+                <div
+                    class="flex-1 overflow-y-auto scroll-smooth hide-scrollbar flex flex-col pb-[100px] md:pb-4 px-1 pt-1">
                     <div id="storeListContainer" class="space-y-3.5 shrink-0 w-full">
                         <!-- Cards will be injected here -->
                     </div>
-                    
+
                     <!-- Bottom Branding Footer -->
-                    <div class="mt-auto pt-8 pb-2 text-center w-full shrink-0 opacity-80 hover:opacity-100 transition-opacity">
+                    <div
+                        class="mt-auto pt-8 pb-2 text-center w-full shrink-0 opacity-80 hover:opacity-100 transition-opacity">
                         <p class="text-[11px] sm:text-xs text-slate-500 font-semibold tracking-wide">
                             Made with ❤️ in India
                         </p>
@@ -258,7 +378,8 @@
     </main>
 
     <!-- --- MOBILE FLOATING FOOTER STATS --- -->
-    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white/70 backdrop-blur-[20px] border-t border-slate-200/50 shadow-[0_-10px_25px_rgba(0,0,0,0.05)] z-[2000] px-6 py-4 flex justify-between items-center rounded-t-[26px] pb-safe">
+    <div
+        class="md:hidden fixed bottom-0 left-0 w-full bg-white/70 backdrop-blur-[20px] border-t border-slate-200/50 shadow-[0_-10px_25px_rgba(0,0,0,0.05)] z-[2000] px-6 py-4 flex justify-between items-center rounded-t-[26px] pb-safe">
         <div class="flex flex-col">
             <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Total Branches</span>
             <span class="text-[24px] font-extrabold text-slate-800 leading-none" id="stat-total-mobile">-</span>
@@ -273,14 +394,16 @@
         </div>
     </div>
 
-    <!-- --- FLOATING CONTACT BUTTON --- -->
-    <a href="https://wa.me/918788076734?text=Hi,%20I%20need%20a%20custom%20branch%20locator%20map." target="_blank" rel="noopener noreferrer" class="fixed z-[2500] bottom-[95px] md:bottom-6 left-1/2 -translate-x-1/2 md:left-6 md:translate-x-0 bg-slate-900/95 backdrop-blur-md text-white px-4 py-2.5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.2)] flex items-center gap-2.5 transition-all hover:bg-black hover:scale-105 active:scale-95 border border-slate-700/50 w-max max-w-[92vw]">
-        <div class="bg-[#25D366] p-1.5 rounded-full shadow-sm">
-            <svg viewBox="0 0 24 24" fill="white" class="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-        </div>
-        <span class="text-[11px] sm:text-xs font-medium tracking-wide">
-            Need a custom branch locator map? <span class="font-bold text-[#25D366] ml-0.5">Contact us.</span>
-        </span>
+    <!-- --- WHATSAPP FLOATING BUTTON --- -->
+    <a id="wa-float" href="https://wa.me/918788076734?text=Hi,%20I%20need%20a%20custom%20branch%20locator%20map."
+        target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+        <svg width="24px" height="24px" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg">
+            <title>WhatsApp icon</title>
+            <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z">
+            </path>
+        </svg>
+        <span class="wa-tip">Need a custom branch locator map? Contact us.</span>
     </a>
 
     <!-- Leaflet JS -->
@@ -288,9 +411,9 @@
 
     <!-- App Logic -->
     <script>
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv"; 
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv";
 
-        let USER_LOCATION = { lat: 16.6925, lng: 74.2306 }; 
+        let USER_LOCATION = { lat: 16.6925, lng: 74.2306 };
         let STORES = [];
         let selectedStoreId = null;
         let mapInstance = null;
@@ -309,23 +432,23 @@
 
         // Haversine Distance
         function calculateRealDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; 
+            const R = 6371;
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; 
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
         }
 
         function updateAndSortDistances() {
-            if (STORES.length === 0) return; 
+            if (STORES.length === 0) return;
             STORES.forEach(store => {
                 const dist = calculateRealDistance(USER_LOCATION.lat, USER_LOCATION.lng, store.lat, store.lng);
-                store.distance = dist.toFixed(1); 
+                store.distance = dist.toFixed(1);
             });
             STORES.sort((a, b) => {
-                if (b.rating !== a.rating) return b.rating - a.rating; 
-                return b.reviews - a.reviews; 
+                if (b.rating !== a.rating) return b.rating - a.rating;
+                return b.reviews - a.reviews;
             });
         }
 
@@ -335,7 +458,7 @@
             for (let key of rowKeys) {
                 for (let name of possibleNames) { if (key.toLowerCase().trim().includes(name)) return row[key]; }
             }
-            return null; 
+            return null;
         }
 
         function fetchDataFromGoogleSheet() {
@@ -365,57 +488,57 @@
                 download: true,
                 header: true,
                 skipEmptyLines: true,
-                complete: function(results) {
+                complete: function (results) {
                     const parsedStores = results.data.map((row, index) => {
                         const latVal = getColumnValue(row, ['lat', 'latitude', 'y point']);
                         const lngVal = getColumnValue(row, ['lng', 'longitude', 'long', 'x point']);
                         return {
-                            id: index + 100, 
+                            id: index + 100,
                             name: getColumnValue(row, ['name', 'title', 'school', 'branch']) || "Nalanda School",
                             category: getColumnValue(row, ['category', 'type']) || "Educational Institution",
                             lat: parseFloat(latVal),
                             lng: parseFloat(lngVal),
                             rating: parseFloat(getColumnValue(row, ['rating', 'score'])) || 5.0,
                             reviews: parseInt(getColumnValue(row, ['reviews', 'review count'])) || 0,
-                            distance: "0", 
+                            distance: "0",
                             address: getColumnValue(row, ['address', 'location']) || "No Address Provided",
                             phone: String(getColumnValue(row, ['phone', 'mobile', 'contact', 'whatsapp']) || ""),
                             time: getColumnValue(row, ['time', 'hours', 'status']) || "Open 09:00am - 5:00pm",
                             reviewQuote: getColumnValue(row, ['reviewquote', 'quote', 'review']) || ""
                         };
-                    }).filter(s => !isNaN(s.lat) && !isNaN(s.lng)); 
+                    }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
 
-                    if(parsedStores.length > 0) {
-                        STORES = parsedStores; 
+                    if (parsedStores.length > 0) {
+                        STORES = parsedStores;
                         updateAnalyticsAndCategories();
                     } else {
-                        STORES = []; 
+                        STORES = [];
                     }
                     fetchUserLocationAndInit();
                 },
-                error: function() { STORES = []; fetchUserLocationAndInit(); }
+                error: function () { STORES = []; fetchUserLocationAndInit(); }
             });
         }
 
         function updateAnalyticsAndCategories() {
             const totalStr = STORES.length;
             let avgStr = '-';
-            if(STORES.length > 0) {
+            if (STORES.length > 0) {
                 const avg = STORES.reduce((sum, s) => sum + s.rating, 0) / STORES.length;
                 avgStr = avg.toFixed(1);
             }
-            
+
             // Desktop Stats
             const statTotalDesktop = document.getElementById('stat-total-desktop');
-            if(statTotalDesktop) statTotalDesktop.textContent = totalStr;
+            if (statTotalDesktop) statTotalDesktop.textContent = totalStr;
             const statRatingDesktop = document.getElementById('stat-rating-desktop');
-            if(statRatingDesktop) statRatingDesktop.textContent = avgStr;
+            if (statRatingDesktop) statRatingDesktop.textContent = avgStr;
 
             // Mobile Stats
             const statTotalMobile = document.getElementById('stat-total-mobile');
-            if(statTotalMobile) statTotalMobile.textContent = totalStr;
+            if (statTotalMobile) statTotalMobile.textContent = totalStr;
             const statRatingMobile = document.getElementById('stat-rating-mobile');
-            if(statRatingMobile) statRatingMobile.textContent = avgStr;
+            if (statRatingMobile) statRatingMobile.textContent = avgStr;
 
             // Populate Category Filter in Header
             const categories = [...new Set(STORES.map(s => s.category))].filter(Boolean);
@@ -452,7 +575,7 @@
         function initializeApp() {
             initMap();
             renderList();
-            
+
             const globalSearchInput = document.getElementById('globalSearch');
             const sidebarSearchInput = document.getElementById('sidebarSearch');
             const mobileFloatingSearch = document.getElementById('mobileFloatingSearch');
@@ -460,17 +583,17 @@
 
             // Sync interactions across all search inputs
             const updateSearches = (val) => {
-                if(globalSearchInput) globalSearchInput.value = val;
-                if(sidebarSearchInput) sidebarSearchInput.value = val;
-                if(mobileFloatingSearch) mobileFloatingSearch.value = val;
+                if (globalSearchInput) globalSearchInput.value = val;
+                if (sidebarSearchInput) sidebarSearchInput.value = val;
+                if (mobileFloatingSearch) mobileFloatingSearch.value = val;
                 renderList(); renderMarkers();
             };
 
-            if(globalSearchInput) globalSearchInput.addEventListener('input', (e) => updateSearches(e.target.value));
-            if(sidebarSearchInput) sidebarSearchInput.addEventListener('input', (e) => updateSearches(e.target.value));
-            if(mobileFloatingSearch) mobileFloatingSearch.addEventListener('input', (e) => updateSearches(e.target.value));
-            
-            if(headerCategoryFilter) {
+            if (globalSearchInput) globalSearchInput.addEventListener('input', (e) => updateSearches(e.target.value));
+            if (sidebarSearchInput) sidebarSearchInput.addEventListener('input', (e) => updateSearches(e.target.value));
+            if (mobileFloatingSearch) mobileFloatingSearch.addEventListener('input', (e) => updateSearches(e.target.value));
+
+            if (headerCategoryFilter) {
                 headerCategoryFilter.addEventListener('change', () => {
                     renderList(); renderMarkers();
                     selectedStoreId = null;
@@ -479,7 +602,7 @@
 
             document.getElementById('zoomInBtn').addEventListener('click', () => mapInstance.zoomIn());
             document.getElementById('zoomOutBtn').addEventListener('click', () => mapInstance.zoomOut());
-            
+
             document.getElementById('locateBtn').addEventListener('click', () => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((pos) => {
@@ -487,7 +610,7 @@
                         USER_LOCATION.lng = pos.coords.longitude;
                         mapInstance.flyTo([USER_LOCATION.lat, USER_LOCATION.lng], 14, { duration: 1 });
                         selectedStoreId = null;
-                        if(userMarker) userMarker.setLatLng([USER_LOCATION.lat, USER_LOCATION.lng]);
+                        if (userMarker) userMarker.setLatLng([USER_LOCATION.lat, USER_LOCATION.lng]);
                         updateAndSortDistances();
                         renderList();
                         renderMarkers();
@@ -495,7 +618,7 @@
                 }
             });
 
-            window.addEventListener('resize', () => { if(mapInstance) mapInstance.invalidateSize(); });
+            window.addEventListener('resize', () => { if (mapInstance) mapInstance.invalidateSize(); });
             lucide.createIcons();
 
             // Hide the App Preloader with smooth fade after initialization
@@ -515,7 +638,7 @@
             markersLayer = L.layerGroup().addTo(mapInstance);
 
             const userIconHTML = `<div style="transform: translate(-50%, -50%);" class="flex flex-col items-center pointer-events-none"><div class="w-12 h-12 bg-blue-500 rounded-full opacity-20 absolute animate-ping"></div><div class="w-4 h-4 bg-blue-600 rounded-full border-[3px] border-white shadow-md relative z-10"></div></div>`;
-            const userIcon = L.divIcon({ className: 'bg-transparent border-none', html: userIconHTML, iconSize: [0,0] });
+            const userIcon = L.divIcon({ className: 'bg-transparent border-none', html: userIconHTML, iconSize: [0, 0] });
             userMarker = L.marker([USER_LOCATION.lat, USER_LOCATION.lng], { icon: userIcon, interactive: false }).addTo(mapInstance);
 
             renderMarkers();
@@ -524,7 +647,7 @@
                 const bounds = L.latLngBounds(STORES.map(store => [store.lat, store.lng]));
                 mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
             } else {
-                mapInstance.setView([16.6925, 74.2306], 13); 
+                mapInstance.setView([16.6925, 74.2306], 13);
             }
         }
 
@@ -532,7 +655,7 @@
             // Check whichever input is visible/active
             const query = (window.innerWidth < 768 ? document.getElementById('mobileFloatingSearch').value : document.getElementById('sidebarSearch').value).toLowerCase();
             const catFilter = document.getElementById('headerCategoryFilter') ? document.getElementById('headerCategoryFilter').value : 'all';
-            
+
             return STORES.filter(store => {
                 const matchesSearch = store.name.toLowerCase().includes(query) || store.address.toLowerCase().includes(query);
                 const matchesCat = catFilter === 'all' || store.category.toLowerCase() === catFilter;
@@ -546,19 +669,17 @@
 
             getFilteredStores().forEach(store => {
                 const isSelected = selectedStoreId === store.id;
-                
-                // UX Upgrade: Added a soft animated ring (ping) around the active marker to draw the eye immediately.
+
                 const iconHTML = `
                     <div style="transform: translate(-50%, -100%); width: max-content;" class="flex items-center relative gap-1 transition-all duration-300 ${isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[500]'}">
                         <div class="hidden sm:block px-3 py-1.5 text-[11px] font-extrabold rounded-lg shadow-lg whitespace-nowrap ${isSelected ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}">
                             ${store.name}
                         </div>
                         <div class="relative flex flex-col items-center">
-                            ${isSelected ? '<div class="absolute -inset-2 bg-brand-400/30 rounded-full animate-ping pointer-events-none"></div>' : ''}
-                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 relative z-10 ${isSelected ? 'bg-gradient-to-br from-brand-500 to-brand-700 border-white ring-4 ring-brand-300/50' : 'bg-gradient-to-br from-brand-400 to-brand-600 border-white'}">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold shadow-xl border-2 ${isSelected ? 'bg-gradient-to-br from-brand-500 to-brand-700 border-white ring-4 ring-brand-300/50' : 'bg-gradient-to-br from-brand-400 to-brand-600 border-white'}">
                                 N
                             </div>
-                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 relative z-10 ${isSelected ? 'bg-brand-700' : 'bg-brand-600'}"></div>
+                            <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 absolute -bottom-1 sm:-bottom-1.5 rotate-45 ${isSelected ? 'bg-brand-700' : 'bg-brand-600'}"></div>
                         </div>
                     </div>
                 `;
@@ -572,17 +693,17 @@
         function selectStore(id) {
             selectedStoreId = id;
             const store = STORES.find(s => s.id === id);
-            
+
             if (store && mapInstance) {
                 const isMobile = window.innerWidth < 768;
                 const offsetLat = isMobile ? store.lat + 0.003 : store.lat;
                 mapInstance.flyTo([offsetLat, store.lng], 15, { duration: 0.8 });
             }
-            
+
             renderList();
             renderMarkers();
-            
-            if(window.innerWidth < 768) {
+
+            if (window.innerWidth < 768) {
                 setTimeout(() => {
                     const activeCard = document.getElementById(`store-card-${id}`);
                     if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -592,7 +713,7 @@
 
         function generateStars(rating) {
             let starsHTML = '';
-            for(let i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i++) {
                 const isFilled = i < Math.floor(rating);
                 starsHTML += `<i data-lucide="star" class="w-3.5 h-3.5 ${isFilled ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}"></i>`;
             }
@@ -602,17 +723,13 @@
         function renderList() {
             const container = document.getElementById('storeListContainer');
             const filteredStores = getFilteredStores();
-            container.innerHTML = ''; 
+            container.innerHTML = '';
 
-            // UX Upgrade: Beautiful Empty State illustration/layout
             if (filteredStores.length === 0) {
                 container.innerHTML = `
-                    <div class="m-4 p-8 text-center flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-                        <div class="bg-white p-3 rounded-full shadow-sm mb-3">
-                            <i data-lucide="map-x" class="w-8 h-8 text-slate-400"></i>
-                        </div>
-                        <h4 class="font-bold text-slate-700 text-[15px]">No branches found</h4>
-                        <p class="text-xs mt-1 text-slate-500 max-w-[200px] leading-relaxed">Try adjusting your search or selecting a different category.</p>
+                    <div class="p-8 text-center flex flex-col items-center justify-center h-full text-slate-400">
+                        <i data-lucide="map-x" class="w-10 h-10 mb-3 opacity-50"></i>
+                        <p class="font-medium text-sm">Koi branch nahi mili.</p>
                     </div>
                 `;
                 lucide.createIcons();
@@ -621,10 +738,9 @@
 
             filteredStores.forEach((store, index) => {
                 const isSelected = selectedStoreId === store.id;
-                
-                // UX Upgrades: Button Gradients, Smooth Hover Glow on desktop
+
                 const cardHTML = `
-                    <div id="store-card-${store.id}" class="card-enter bg-white rounded-[18px] p-4 border ${isSelected ? 'border-brand-400 shadow-[0_4px_15px_rgba(59,130,246,0.15)] bg-brand-50/30' : 'border-slate-200 shadow-sm hover:-translate-y-[1px] hover:shadow-[0_8px_20px_rgba(59,130,246,0.08)] hover:border-brand-200'} transition-all cursor-pointer relative overflow-hidden" style="animation-delay: ${index * 40}ms" onclick="selectStore(${store.id})">
+                    <div id="store-card-${store.id}" class="card-enter bg-white rounded-[18px] p-4 border ${isSelected ? 'border-brand-400 shadow-[0_4px_15px_rgba(59,130,246,0.15)] bg-brand-50/30' : 'border-slate-200 shadow-sm hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(59,130,246,0.12)]'} transition-all cursor-pointer relative overflow-hidden" style="animation-delay: ${index * 40}ms" onclick="selectStore(${store.id})">
                         ${isSelected ? '<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-brand-400 to-brand-600"></div>' : ''}
                         
                         <div class="flex justify-between items-start gap-2 mb-1.5 pl-1.5">
@@ -654,8 +770,8 @@
                                     <span class="text-[13px] text-slate-700 font-medium">${store.phone}</span>
                                 </div>
                                 
-                                <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center gap-1.5 bg-gradient-to-br from-[#25D366] to-[#1DA851] text-white rounded-full text-[12px] font-bold transition-all shadow-[0_2px_8px_rgba(37,211,102,0.25)] active:scale-[0.96]" style="padding: 6px 14px;">
-                                    ${whatsappSvg} Chat
+                                <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white p-2 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] font-bold transition-all shadow-sm active:scale-95">
+                                    ${whatsappSvg} <span class="hidden sm:inline">Chat</span>
                                 </button>
                             </div>
 
@@ -665,8 +781,8 @@
                                     <span class="text-[13px] text-slate-600">Status: <span class="text-slate-800 font-medium">${store.time}</span></span>
                                 </div>
                                 
-                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&dirflg=d')" class="flex items-center gap-1.5 bg-gradient-to-br from-brand-50 to-blue-100 text-brand-700 border border-blue-200/50 rounded-full text-[12px] font-bold transition-all shadow-sm active:scale-[0.96] hover:shadow-md hover:from-blue-100 hover:to-blue-200" style="padding: 6px 14px;">
-                                    <i data-lucide="corner-up-right" class="w-3.5 h-3.5"></i> Route
+                                <button onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&dirflg=d')" class="flex items-center justify-center gap-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 border border-brand-100 p-2 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] font-bold transition-all shadow-sm active:scale-95">
+                                    <i data-lucide="corner-up-right" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Route</span>
                                 </button>
                             </div>
                         </div>
@@ -683,7 +799,7 @@
                         ` : ''}
                     </div>
                 `;
-                
+
                 container.insertAdjacentHTML('beforeend', cardHTML);
             });
 
@@ -691,4 +807,5 @@
         }
     </script>
 </body>
+
 </html>
