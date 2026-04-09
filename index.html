@@ -708,6 +708,27 @@
                     </div>
                 </div>
 
+                <!-- Sort Mode Toggle Pills -->
+                <div class="flex gap-2 mb-3 shrink-0">
+                    <button id="sort-btn-rating" onclick="setSortMode('rating')"
+                        class="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 px-3 rounded-full border transition-all duration-200 bg-[#438c16] text-white border-[#438c16]">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        Top Rated
+                    </button>
+                    <button id="sort-btn-distance" onclick="setSortMode('distance')"
+                        class="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 px-3 rounded-full border transition-all duration-200 bg-white text-slate-500 border-slate-200">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="10" r="3" />
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                        </svg>
+                        Nearest First
+                    </button>
+                </div>
+
                 <!-- Store Cards Container & Custom Footer Wrapper -->
                 <!-- Wrapper handles scroll, and ensures footer is pushed to bottom -->
                 <div
@@ -918,6 +939,7 @@
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv";
 
         let BRAND_NAME = '';
+        let SORT_MODE = 'rating'; // 'rating' | 'distance'
         let USER_LOCATION = { lat: 16.6925, lng: 74.2306 };
         let STORES = [];
         let selectedStoreId = null;
@@ -952,6 +974,7 @@
                 store.distance = dist.toFixed(1);
             });
             STORES.sort((a, b) => {
+                if (SORT_MODE === 'distance') return parseFloat(a.distance) - parseFloat(b.distance);
                 if (b.rating !== a.rating) return b.rating - a.rating;
                 return b.reviews - a.reviews;
             });
@@ -1003,7 +1026,7 @@
                             category: getColumnValue(row, ['category', 'type']) || "Educational Institution",
                             lat: parseFloat(latVal),
                             lng: parseFloat(lngVal),
-                            rating: parseFloat(getColumnValue(row, ['rating', 'score'])) || 5.0,
+                            rating: parseFloat(getColumnValue(row, ['rating', 'score'])) || 0,
                             reviews: parseInt(getColumnValue(row, ['reviews', 'review count'])) || 0,
                             distance: "0",
                             address: getColumnValue(row, ['address', 'location']) || "No Address Provided",
@@ -1273,7 +1296,41 @@
                 </div>`;
         }
 
+        /* ===== SORT TOGGLE ===== */
+        const _SA = 'flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 px-3 rounded-full border transition-all duration-200 bg-[#438c16] text-white border-[#438c16]';
+        const _SI = 'flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 px-3 rounded-full border transition-all duration-200 bg-white text-slate-500 border-slate-200';
+
+        function setSortMode(mode) {
+            SORT_MODE = mode;
+            const rb = document.getElementById('sort-btn-rating');
+            const db = document.getElementById('sort-btn-distance');
+            if (rb) rb.className = mode === 'rating' ? _SA : _SI;
+            if (db) db.className = mode === 'distance' ? _SA : _SI;
+
+            // If "Nearest First" selected but location not yet granted, request it first
+            if (mode === 'distance' && USER_LOCATION.lat === 16.6925 && USER_LOCATION.lng === 74.2306) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            USER_LOCATION.lat = pos.coords.latitude;
+                            USER_LOCATION.lng = pos.coords.longitude;
+                            if (userMarker) userMarker.setLatLng([USER_LOCATION.lat, USER_LOCATION.lng]);
+                            updateAndSortDistances();
+                            renderList();
+                            renderMarkers();
+                        },
+                        () => { updateAndSortDistances(); renderList(); },
+                        { timeout: 5000 }
+                    );
+                    return; // wait for geolocation callback
+                }
+            }
+            updateAndSortDistances();
+            renderList();
+        }
+
         function renderList() {
+
             const container = document.getElementById('storeListContainer');
             const filteredStores = getFilteredStores();
             container.innerHTML = '';
@@ -1323,7 +1380,7 @@
                                     <span class="text-[13px] text-slate-700 font-medium">${store.phone}</span>
                                 </div>
                                 
-                                <button onclick="event.stopPropagation(); window.open('https://wa.me/91${store.phone.replace(/[^0-9]/g, '')}')" class="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white p-2 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] font-bold transition-all shadow-sm active:scale-95">
+                                <button onclick="event.stopPropagation(); var _p=String('${store.phone}'.replace(/[^0-9]/g,'')); if(_p.startsWith('91')&&_p.length>10) _p=_p.slice(2); window.open('https://wa.me/91'+_p)" class="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white p-2 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] font-bold transition-all shadow-sm active:scale-95">
                                     ${whatsappSvg} <span class="hidden sm:inline">Chat</span>
                                 </button>
                             </div>
@@ -1338,10 +1395,9 @@
                                     <i data-lucide="corner-up-right" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Route</span>
                                 </button>
                             </div>
+                            <!-- Social Media Row (inside padded block) -->
+                            ${store.social ? `<div class="pt-1 border-t border-slate-100 mt-0.5">${buildSocialRow(store.social)}</div>` : ''}
                         </div>
-
-                        <!-- Social Media Link -->
-                        ${buildSocialRow(store.social)}
 
                         <!-- Review Quote Block -->
                         ${store.reviewQuote ? `
