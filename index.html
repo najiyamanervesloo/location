@@ -390,6 +390,142 @@
             font-size: 11px;
             color: #4b7a1c;
         }
+
+        /* ======= MOBILE DOCK NAV ======= */
+        #mobile-dock {
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+
+        #mobile-dock-bar {
+            position: relative;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 13px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 64px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.09), 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        #social-center-fab {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: -26px;
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #50a81a, #265208);
+            box-shadow: 0 0 0 5px white, 0 10px 30px rgba(67, 140, 22, 0.45);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 5;
+        }
+
+        #social-center-fab:active {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        #social-center-fab.open {
+            transform: translateX(-50%) rotate(45deg);
+            background: linear-gradient(145deg, #ef4444, #b91c1c);
+            box-shadow: 0 0 0 5px white, 0 8px 28px rgba(239, 68, 68, 0.4);
+        }
+
+        #social-fan-row {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(100% + 20px);
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .sfan-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(22px) scale(0.5);
+            transition: opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            text-decoration: none;
+        }
+
+        .sfan-btn.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .sfan-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #475569;
+            text-align: center;
+            margin-top: 5px;
+            letter-spacing: 0.04em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sfan-wrap.show .sfan-label {
+            opacity: 1;
+        }
+
+        .sfan-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dock-stat {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex: 1;
+        }
+
+        .dock-stat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dock-stat-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1;
+        }
+
+        .dock-stat-val {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.15;
+            color: #1e293b;
+        }
     </style>
 </head>
 
@@ -580,19 +716,95 @@
         </div>
     </main>
 
-    <!-- --- MOBILE FLOATING FOOTER STATS --- -->
-    <div
-        class="md:hidden fixed bottom-0 left-0 w-full bg-white/70 backdrop-blur-[20px] border-t border-slate-200/50 shadow-[0_-10px_25px_rgba(0,0,0,0.05)] z-[2000] px-6 py-4 flex justify-between items-center rounded-t-[26px] pb-safe">
-        <div class="flex flex-col">
-            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Total Branches</span>
-            <span class="text-[24px] font-extrabold text-slate-800 leading-none" id="stat-total-mobile">-</span>
-        </div>
-        <div class="w-[1px] h-8 bg-slate-200"></div>
-        <div class="flex flex-col items-end">
-            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Network Rating</span>
-            <div class="flex items-center gap-1.5">
-                <span class="text-[24px] font-extrabold text-slate-800 leading-none" id="stat-rating-mobile">-</span>
-                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400 -mt-0.5"></i>
+    <!-- --- MOBILE BOTTOM DOCK --- -->
+    <div id="mobile-dock" class="md:hidden fixed bottom-0 left-0 w-full z-[2000] px-4">
+        <div style="position:relative;">
+
+            <!-- Social Fan-out Icons (above dock) -->
+            <div id="social-fan-row">
+                <!-- Facebook -->
+                <div class="sfan-wrap">
+                    <a href="https://www.facebook.com/TheNalandaSchool/" target="_blank" rel="noopener" class="sfan-btn"
+                        style="background:#1877F2;transition-delay:120ms;" aria-label="Facebook">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                        </svg>
+                    </a>
+                    <span class="sfan-label">Facebook</span>
+                </div>
+                <!-- Instagram -->
+                <div class="sfan-wrap">
+                    <a href="https://www.instagram.com/thenalandaschool/" target="_blank" rel="noopener"
+                        class="sfan-btn"
+                        style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);transition-delay:60ms;"
+                        aria-label="Instagram">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="#E1306C" />
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="#E1306C" stroke-width="2.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </a>
+                    <span class="sfan-label">Instagram</span>
+                </div>
+                <!-- YouTube -->
+                <div class="sfan-wrap">
+                    <a href="https://www.youtube.com/@thenalandaschool" target="_blank" rel="noopener" class="sfan-btn"
+                        style="background:#FF0000;transition-delay:0ms;" aria-label="YouTube">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                            <path
+                                d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+                            <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#FF0000" />
+                        </svg>
+                    </a>
+                    <span class="sfan-label">YouTube</span>
+                </div>
+            </div>
+
+            <!-- Dark Pill Dock Bar -->
+            <div id="mobile-dock-bar">
+
+                <!-- Center FAB (protrudes above dock) -->
+                <button id="social-center-fab" onclick="toggleSocialFab()" aria-label="Follow us on social media">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                </button>
+
+                <!-- Left: Branches Stat -->
+                <div class="dock-stat">
+                    <div class="dock-stat-icon" style="background:rgba(67,140,22,0.18);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6ab82c" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="dock-stat-lbl" style="color:#6ab82c;">Branches</div>
+                        <div class="dock-stat-val" id="stat-total-mobile">-</div>
+                    </div>
+                </div>
+
+                <!-- Right: Rating Stat -->
+                <div class="dock-stat" style="justify-content:flex-end;">
+                    <div style="text-align:right;">
+                        <div class="dock-stat-lbl" style="color:#fbbf24;">Rating</div>
+                        <div class="dock-stat-val" id="stat-rating-mobile">-</div>
+                    </div>
+                    <div class="dock-stat-icon" style="background:rgba(251,191,36,0.15);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -781,7 +993,8 @@
                             address: getColumnValue(row, ['address', 'location']) || "No Address Provided",
                             phone: String(getColumnValue(row, ['phone', 'mobile', 'contact', 'whatsapp']) || ""),
                             time: getColumnValue(row, ['time', 'hours', 'status']) || "Open 09:00am - 5:00pm",
-                            reviewQuote: getColumnValue(row, ['reviewquote', 'quote', 'review']) || ""
+                            reviewQuote: getColumnValue(row, ['reviewquote', 'quote', 'review']) || "",
+                            social: getColumnValue(row, ['social', 'social link', 'social_link', 'social media', 'facebook', 'instagram', 'youtube', 'website', 'url', 'link']) || ""
                         };
                     }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
 
@@ -997,6 +1210,37 @@
             return starsHTML;
         }
 
+        function buildSocialRow(url) {
+            if (!url || url.trim() === '') return '';
+            const u = url.toLowerCase();
+            let icon, label, btnClass;
+            if (u.includes('facebook.com') || u.includes('fb.com') || u.includes('fb.me')) {
+                icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#1877F2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`;
+                label = 'Facebook'; btnClass = 'bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100';
+            } else if (u.includes('instagram.com') || u.includes('instagr.am')) {
+                icon = `<svg width="14" height="14" viewBox="0 0 24 24"><defs><linearGradient id="igG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#f09433"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#igG)"/><circle cx="12" cy="12" r="4" fill="white"/><circle cx="17.5" cy="6.5" r="1.5" fill="white"/></svg>`;
+                label = 'Instagram'; btnClass = 'bg-pink-50 text-pink-600 border border-pink-100 hover:bg-pink-100';
+            } else if (u.includes('youtube.com') || u.includes('youtu.be')) {
+                icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="#FF0000"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>`;
+                label = 'YouTube'; btnClass = 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100';
+            } else {
+                icon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
+                label = 'Website'; btnClass = 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100';
+            }
+            return `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        ${icon}
+                        <span class="text-[13px] text-slate-600 font-medium">${label}</span>
+                    </div>
+                    <a href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+                       class="flex items-center justify-center gap-1.5 ${btnClass} p-2 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] font-bold transition-all shadow-sm active:scale-95">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        <span class="hidden sm:inline">Visit</span>
+                    </a>
+                </div>`;
+        }
+
         function renderList() {
             const container = document.getElementById('storeListContainer');
             const filteredStores = getFilteredStores();
@@ -1064,6 +1308,9 @@
                             </div>
                         </div>
 
+                        <!-- Social Media Link -->
+                        ${buildSocialRow(store.social)}
+
                         <!-- Review Quote Block -->
                         ${store.reviewQuote ? `
                         <div class="mt-4 pt-3 border-t border-slate-100 flex items-start gap-2 relative pl-3">
@@ -1117,6 +1364,46 @@
         }
         /* Close modal on Escape key */
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeEmbedModal(); });
+
+        /* ===== SOCIAL DOCK FAB ===== */
+        let _socialOpen = false;
+        function toggleSocialFab() {
+            _socialOpen = !_socialOpen;
+            const fab = document.getElementById('social-center-fab');
+            const items = document.querySelectorAll('.sfan-btn');
+            const wraps = document.querySelectorAll('.sfan-wrap');
+            const fanRow = document.getElementById('social-fan-row');
+
+            if (_socialOpen) {
+                fab.classList.add('open');
+                fanRow.style.pointerEvents = 'all';
+                items.forEach((item, i) => {
+                    setTimeout(() => {
+                        item.classList.add('show');
+                        wraps[i] && wraps[i].classList.add('show');
+                    }, i * 70);
+                });
+                setTimeout(() => {
+                    document.addEventListener('click', _closeSocialOutside);
+                }, 150);
+            } else {
+                _closeSocialFab();
+            }
+        }
+        function _closeSocialFab() {
+            _socialOpen = false;
+            const fab = document.getElementById('social-center-fab');
+            const fanRow = document.getElementById('social-fan-row');
+            if (fab) fab.classList.remove('open');
+            if (fanRow) fanRow.style.pointerEvents = 'none';
+            document.querySelectorAll('.sfan-btn').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.sfan-wrap').forEach(el => el.classList.remove('show'));
+            document.removeEventListener('click', _closeSocialOutside);
+        }
+        function _closeSocialOutside(e) {
+            const dock = document.getElementById('mobile-dock');
+            if (dock && !dock.contains(e.target)) _closeSocialFab();
+        }
     </script>
 </body>
 
