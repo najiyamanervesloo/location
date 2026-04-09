@@ -534,16 +534,26 @@
     <!-- --- APP PRELOADER (SPLASH SCREEN) --- -->
     <div id="app-preloader"
         class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
+
+        <!-- Logo Icon -->
         <div
             class="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-[14px] sm:rounded-[18px] bg-[#438c16] shadow-[0_8px_30px_rgba(67,140,22,0.3)] mb-5 animate-pulse">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="white" class="w-10 h-10 sm:w-12 sm:h-12 -ml-1 -mt-1">
                 <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
             </svg>
         </div>
-        <div class="font-bold text-[26px] sm:text-[32px] tracking-tight leading-none text-black mb-2">
-            Vesloo<span class="text-[#438c16]">Map</span>Studio
+
+        <!-- Welcome Label -->
+        <p class="text-[12px] sm:text-[13px] text-slate-400 font-bold uppercase tracking-[0.18em] mb-2">Welcome to</p>
+
+        <!-- Dynamic Brand Name -->
+        <div id="preloader-brand"
+            class="font-extrabold text-[22px] sm:text-[28px] tracking-tight leading-tight text-slate-800 text-center px-6 max-w-[320px] min-h-[36px] transition-all duration-500">
+            <span class="shimmer inline-block w-48 h-7 rounded-lg align-middle"></span>
         </div>
-        <div class="text-[13px] sm:text-[14px] text-slate-500 font-medium flex items-center gap-2 mt-4">
+
+        <!-- Loading Spinner -->
+        <div class="text-[13px] text-slate-400 font-medium flex items-center gap-2 mt-6">
             <svg class="animate-spin h-4 w-4 text-[#438c16]" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -551,10 +561,15 @@
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                 </path>
             </svg>
-            Made with ❤️ in India
-
-            © 2026 Vesloo Technologies
+            Fetching locations...
         </div>
+
+        <!-- Fixed Footer Branding -->
+        <div class="absolute bottom-7 text-center">
+            <p class="text-[11px] text-slate-400 font-semibold tracking-wide">Made with ❤️ in India</p>
+            <p class="text-[10px] text-slate-300 mt-0.5 font-medium">&copy; 2026 Vesloo Technologies</p>
+        </div>
+
     </div>
 
     <!-- --- PREMIUM FLOATING HEADER & MOBILE SEARCH --- -->
@@ -902,6 +917,7 @@
     <script>
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS55z-6IUnpM14Kpnyo4LRXyTBfN-T7vuye-SJkl4QrUsNFxRdqA2bnqXbd1lDvUnCSlS6rYXILxKO7/pub?gid=0&single=true&output=csv";
 
+        let BRAND_NAME = '';
         let USER_LOCATION = { lat: 16.6925, lng: 74.2306 };
         let STORES = [];
         let selectedStoreId = null;
@@ -997,6 +1013,22 @@
                             social: getColumnValue(row, ['social', 'social link', 'social_link', 'social media', 'facebook', 'instagram', 'youtube', 'website', 'url', 'link']) || ""
                         };
                     }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
+
+                    // ── Read Brand Name from first data row ──
+                    if (results.data.length > 0) {
+                        const _bv = getColumnValue(results.data[0], [
+                            'brand', 'brand name', 'brand_name', 'company', 'company name',
+                            'organization', 'org', 'group name', 'school name', 'institution'
+                        ]) || '';
+                        if (_bv.trim()) {
+                            BRAND_NAME = _bv.trim();
+                            const el = document.getElementById('preloader-brand');
+                            if (el) {
+                                el.textContent = BRAND_NAME;
+                                el.style.color = '#1e293b';
+                            }
+                        }
+                    }
 
                     if (parsedStores.length > 0) {
                         STORES = parsedStores;
